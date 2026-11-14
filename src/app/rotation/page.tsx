@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import PageHeader from "@/components/ui/PageHeader";
 import RecommendationCard from "@/components/rotation/RecommendationCard";
+import SeasonTimeline from "@/components/rotation/SeasonTimeline";
 import { useClimate } from "@/lib/nasa/use-climate";
 import { CROP_PARAMS, PARAMETERS_NOTE } from "@/lib/rotation/crops";
 import {
@@ -209,6 +210,12 @@ export default function Page() {
           )}
 
           {rec && <RecommendationCard rec={rec} results={results} />}
+
+          <SeasonTimeline
+            results={results}
+            indicators={climate.indicators}
+            farm={farm!}
+          />
 
           <h2 className="pt-4 font-display text-3xl">Detailed breakdown</h2>
           {results.map((s, i) => (

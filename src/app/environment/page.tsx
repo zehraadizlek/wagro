@@ -13,7 +13,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import GrowingConditions from "@/components/climate/GrowingConditions";
+import Glossary from "@/components/ui/Glossary";
 import PageHeader from "@/components/ui/PageHeader";
+import { computeIndicators } from "@/lib/nasa/indicators";
 import type { DailyPoint, PowerSummary } from "@/lib/nasa/power";
 import { rangeFor } from "@/lib/nasa/range";
 import { computeTrend } from "@/lib/nasa/trend";
@@ -26,6 +29,7 @@ type ApiData = {
   retrievedAt: string;
   points: DailyPoint[];
   summary: PowerSummary;
+  elevationM: number | null;
 };
 
 type Result = { key: string; data?: ApiData; error?: string };
@@ -66,7 +70,7 @@ function Stat({
 
 export default function Page() {
   const { farm, ready } = useFarm();
-  const [years, setYears] = useState(1);
+  const [years, setYears] = useState(10);
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
 
@@ -115,6 +119,17 @@ export default function Page() {
     [data],
   );
 
+  const indicators = useMemo(
+    () =>
+      data && farm
+        ? computeIndicators(data.points, farm.latitude, data.elevationM)
+        : null,
+    [data, farm],
+  );
+
+  // Number of years the loaded data spans, used to show per-year values.
+  const yearsCovered = data ? Math.max(1, data.summary.days / 365.25) : 1;
+
   const tick = { fontSize: 12, fill: "#7a6352" };
 
   return (
@@ -126,7 +141,7 @@ export default function Page() {
             Your <em className="text-terracotta">climate</em>
           </>
         }
-        description="Daily temperature and precipitation for your farm location, straight from NASA POWER."
+        description="Temperature, rain, evaporation, frost, heat and soil wetness for your farm location, from NASA POWER."
       />
 
       {ready && !farm && (
@@ -203,18 +218,25 @@ export default function Page() {
                   tone="bg-sand"
                 />
                 <Stat
-                  title="Total precipitation"
-                  value={fmt(data.summary.totalPrecip, 0)}
+                  title={years > 1 ? "Precipitation per year" : "Total precipitation"}
+                  value={fmt(
+                    data.summary.totalPrecip === null
+                      ? null
+                      : data.summary.totalPrecip / yearsCovered,
+                    0,
+                  )}
                   unit="mm"
                   tone="bg-sage"
                 />
                 <Stat
-                  title="Days with 1 mm or more"
-                  value={String(data.summary.rainyDays)}
+                  title={years > 1 ? "Days with 1 mm or more, per year" : "Days with 1 mm or more"}
+                  value={String(Math.round(data.summary.rainyDays / yearsCovered))}
                   unit="days"
                   tone="bg-espresso text-paper"
                 />
               </div>
+
+              {indicators && <GrowingConditions ind={indicators} />}
 
               <section className="rounded-[28px] border border-line bg-paper p-6">
                 <h2 className="font-display text-3xl">
@@ -332,7 +354,15 @@ export default function Page() {
                   Data source and limitations
                 </h3>
                 <ul className="list-disc space-y-1 pl-5">
-                  <li>Source: {data.source}. A NASA product.</li>
+                  <li>
+                    Source: {data.source}. A NASA product built from the
+                    MERRA-2 reanalysis and CERES satellite data.
+                  </li>
+                  <li>
+                    Evapotranspiration (ET0) is calculated by Wagro with the
+                    FAO-56 Penman-Monteith method from POWER temperature,
+                    humidity, wind and radiation.
+                  </li>
                   <li>
                     Period: {data.start} to {data.end}. Retrieved on{" "}
                     {new Date(data.retrievedAt).toLocaleString()}.
@@ -352,6 +382,8 @@ export default function Page() {
                   </li>
                 </ul>
               </section>
+
+              <Glossary />
             </div>
           )}
         </>

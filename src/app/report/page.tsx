@@ -11,6 +11,8 @@ import {
   YAxis,
 } from "recharts";
 import RecommendationCard from "@/components/rotation/RecommendationCard";
+import SeasonTimeline from "@/components/rotation/SeasonTimeline";
+import { doyLabel } from "@/lib/nasa/indicators";
 import { useClimate } from "@/lib/nasa/use-climate";
 import { CROP_PARAMS, PARAMETERS_NOTE } from "@/lib/rotation/crops";
 import {
@@ -88,6 +90,9 @@ export default function Page() {
     ),
   }));
   const s = climate.summary;
+  const ind = climate.indicators;
+  const n0 = (v: number | null, unit: string) =>
+    v === null ? "n/a" : `${Math.round(v)} ${unit}`;
 
   return (
     <div className="space-y-6">
@@ -135,6 +140,36 @@ export default function Page() {
             <Row k="Period" v={`${s.start} to ${s.end}`} />
             <Row k="Missing days" v={`${s.missingDays} of ${s.days}`} />
             <Row k="Retrieved" v={new Date(s.retrievedAt).toLocaleString()} />
+            {ind && (
+              <>
+                <h3 className="mt-4 mb-1 text-sm font-medium">
+                  Growing conditions, average of the last {Math.round(ind.years)} years
+                </h3>
+                <Row k="Precipitation per year" v={n0(ind.annual.precipMm, "mm")} />
+                <Row k="Reference evapotranspiration (ET0) per year" v={n0(ind.annual.et0Mm, "mm")} />
+                <Row
+                  k="Aridity (rain ÷ ET0)"
+                  v={ind.annual.aridityIndex === null ? "n/a" : `${ind.annual.aridityIndex.toFixed(2)} (${ind.annual.aridityClass})`}
+                />
+                <Row k="Frost days per year (min below 0 °C)" v={n0(ind.annual.frostDays, "days")} />
+                <Row k="Hot days per year (max 35 °C or more)" v={n0(ind.annual.heatDays35, "days")} />
+                <Row k="Heavy-rain days per year (20 mm or more)" v={ind.annual.heavyRainDays === null ? "n/a" : `${ind.annual.heavyRainDays.toFixed(1)} days`} />
+                <Row
+                  k="Typical last spring / first autumn frost"
+                  v={
+                    ind.frost.lastSpringDoy === null && ind.frost.firstAutumnDoy === null
+                      ? "Frost is rare"
+                      : `${ind.frost.lastSpringDoy === null ? "n/a" : doyLabel(ind.frost.lastSpringDoy)} / ${ind.frost.firstAutumnDoy === null ? "n/a" : doyLabel(ind.frost.firstAutumnDoy)}`
+                  }
+                />
+                {ind.soilMoisture && (
+                  <Row
+                    k="Root-zone soil wetness, last 30 days vs usual"
+                    v={`${ind.soilMoisture.pct > 0 ? "+" : ""}${Math.round(ind.soilMoisture.pct)}%`}
+                  />
+                )}
+              </>
+            )}
             <p className="mt-3 text-xs text-muted">
               Gridded estimates for the cell around your pin, not measurements
               taken inside your field. The Climate page shows a longer trend.
@@ -203,11 +238,21 @@ export default function Page() {
             </div>
           ))}
         </div>
+        <div className="mt-6">
+          <SeasonTimeline results={results} indicators={ind} farm={farm} />
+        </div>
       </Section>
 
       <Section title="5. Data sources">
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
-          <li>Climate: NASA POWER (temperature T2M and precipitation PRECTOTCORR), a NASA product.</li>
+          <li>
+            Climate: NASA POWER daily data, a NASA product. Temperature
+            (T2M, T2M_MAX, T2M_MIN), precipitation (PRECTOTCORR), humidity
+            (RH2M), wind (WS2M), solar radiation (ALLSKY_SFC_SW_DWN) and soil
+            wetness (GWETTOP, GWETROOT). POWER builds these from the MERRA-2
+            reanalysis and CERES satellite products.
+          </li>
+          <li>Evapotranspiration: computed by Wagro with the FAO-56 Penman-Monteith method from the values above.</li>
           <li>Farm and soil details: entered by the user, not verified.</li>
           <li>Crop parameters: prototype assumptions made by the project team.</li>
           <li>Map tiles: OpenStreetMap contributors.</li>
@@ -220,6 +265,7 @@ export default function Page() {
           <li>{PARAMETERS_NOTE}</li>
           <li>Climate values are gridded estimates and not field measurements.</li>
           <li>Climate suitability compares annual values with assumed ranges, so it is only a rough guide.</li>
+          <li>Season calendars use typical sowing and harvest months, not your own dates. Soil wetness comes from a model, not a probe in your field.</li>
           <li>Scores show relative fit under these rules. They do not predict yield, profit or disease risk.</li>
           <li>This report supports a conversation with a local agronomist and does not replace professional advice.</li>
         </ul>

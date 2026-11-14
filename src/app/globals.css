@@ -85,3 +85,13 @@ body::before {
     print-color-adjust: exact;
   }
 }
+
+/* months when the field has no crop */
+.bare-stripes {
+  background-color: var(--color-paper);
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--color-sand) 0 3px,
+    transparent 3px 7px
+  );
+}

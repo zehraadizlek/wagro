@@ -1,7 +1,23 @@
 export type DailyPoint = {
   date: string;
+  /** Mean air temperature at 2 m, °C. */
   t2m: number | null;
+  /** Daily maximum air temperature at 2 m, °C. */
+  tmax: number | null;
+  /** Daily minimum air temperature at 2 m, °C. */
+  tmin: number | null;
+  /** Bias-corrected precipitation, mm/day. */
   precip: number | null;
+  /** Relative humidity at 2 m, %. */
+  rh: number | null;
+  /** Wind speed at 2 m, m/s. */
+  wind: number | null;
+  /** All-sky surface shortwave radiation, MJ/m²/day. */
+  solar: number | null;
+  /** Surface soil wetness, 0 (dry) to 1 (saturated). */
+  gwetTop: number | null;
+  /** Root-zone soil wetness, 0 (dry) to 1 (saturated). */
+  gwetRoot: number | null;
 };
 
 export type PowerSummary = {
@@ -18,7 +34,24 @@ export type PowerSummary = {
 export type PowerData = {
   points: DailyPoint[];
   summary: PowerSummary;
+  /** Grid-cell elevation reported by NASA POWER, in metres. */
+  elevationM: number | null;
 };
+
+/** NASA POWER parameter code for each DailyPoint field. */
+export const POWER_FIELDS = {
+  t2m: "T2M",
+  tmax: "T2M_MAX",
+  tmin: "T2M_MIN",
+  precip: "PRECTOTCORR",
+  rh: "RH2M",
+  wind: "WS2M",
+  solar: "ALLSKY_SFC_SW_DWN",
+  gwetTop: "GWETTOP",
+  gwetRoot: "GWETROOT",
+} as const satisfies Record<Exclude<keyof DailyPoint, "date">, string>;
+
+export const POWER_PARAMS = Object.values(POWER_FIELDS);
 
 const BASE = "https://power.larc.nasa.gov/api/temporal/daily/point";
 
@@ -30,7 +63,7 @@ function fmtDate(key: string): string {
   return `${key.slice(0, 4)}-${key.slice(4, 6)}-${key.slice(6, 8)}`;
 }
 
-function summarize(points: DailyPoint[]): PowerSummary {
+export function summarize(points: DailyPoint[]): PowerSummary {
   const temps = points.map((p) => p.t2m).filter((v): v is number => v !== null);
   const rains = points
     .map((p) => p.precip)
@@ -57,7 +90,7 @@ export async function fetchPower(args: {
   end: string;
 }): Promise<PowerData> {
   const url = new URL(BASE);
-  url.searchParams.set("parameters", "T2M,PRECTOTCORR");
+  url.searchParams.set("parameters", POWER_PARAMS.join(","));
   url.searchParams.set("community", "AG");
   url.searchParams.set("latitude", String(args.lat));
   url.searchParams.set("longitude", String(args.lng));
@@ -74,24 +107,39 @@ export async function fetchPower(args: {
   }
 
   const json = await res.json();
-  const t2m = json?.properties?.parameter?.T2M as
-    | Record<string, number>
+  const param = json?.properties?.parameter as
+    | Record<string, Record<string, number> | undefined>
     | undefined;
-  const prec = json?.properties?.parameter?.PRECTOTCORR as
-    | Record<string, number>
-    | undefined;
+  const t2m = param?.T2M;
+  const prec = param?.PRECTOTCORR;
 
-  if (!t2m || !prec) {
+  if (!param || !t2m || !prec) {
     throw new Error("NASA POWER response did not contain the expected data");
   }
+
+  const series = (field: keyof typeof POWER_FIELDS, key: string) =>
+    clean(param[POWER_FIELDS[field]]?.[key]);
 
   const points: DailyPoint[] = Object.keys(t2m)
     .sort()
     .map((key) => ({
       date: fmtDate(key),
-      t2m: clean(t2m[key]),
-      precip: clean(prec[key]),
+      t2m: series("t2m", key),
+      tmax: series("tmax", key),
+      tmin: series("tmin", key),
+      precip: series("precip", key),
+      rh: series("rh", key),
+      wind: series("wind", key),
+      solar: series("solar", key),
+      gwetTop: series("gwetTop", key),
+      gwetRoot: series("gwetRoot", key),
     }));
 
-  return { points, summary: summarize(points) };
+  const elev = json?.geometry?.coordinates?.[2];
+
+  return {
+    points,
+    summary: summarize(points),
+    elevationM: typeof elev === "number" && Number.isFinite(elev) ? elev : null,
+  };
 }

@@ -32,6 +32,15 @@ export type CropParams = {
   phRange: [number, number];
   /** Assumed suitability of each soil texture, 0 to 100. "unknown" is skipped in scoring. */
   soilTypeFit: Record<Exclude<SoilType, "unknown">, number>;
+  /**
+   * Assumed field calendar for the northern mid-latitudes (months 1 to 12).
+   * Mirrored by six months in the southern hemisphere.
+   */
+  calendar: { sowMonths: number[]; harvestMonth: number };
+  /** Whether the crop usually survives winter frost while young. */
+  frostTolerant: boolean;
+  /** Daily maximum temperature (°C) above which flowering and grain fill are assumed to suffer. */
+  heatStressC: 30 | 32 | 35;
 };
 
 export const CROP_PARAMS: Record<Crop, CropParams> = {
@@ -46,6 +55,9 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     rainRangeMm: [300, 600],
     phRange: [6, 7.5],
     soilTypeFit: { sandy: 55, loamy: 100, clay: 85, silty: 90 },
+    calendar: { sowMonths: [10, 11], harvestMonth: 7 },
+    frostTolerant: true,
+    heatStressC: 32,
   },
   barley: {
     crop: "barley",
@@ -58,6 +70,9 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     rainRangeMm: [250, 500],
     phRange: [6, 7.5],
     soilTypeFit: { sandy: 70, loamy: 100, clay: 75, silty: 90 },
+    calendar: { sowMonths: [10, 11], harvestMonth: 6 },
+    frostTolerant: true,
+    heatStressC: 32,
   },
   corn: {
     crop: "corn",
@@ -70,6 +85,9 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     rainRangeMm: [500, 800],
     phRange: [5.8, 7],
     soilTypeFit: { sandy: 50, loamy: 100, clay: 70, silty: 95 },
+    calendar: { sowMonths: [4, 5], harvestMonth: 10 },
+    frostTolerant: false,
+    heatStressC: 35,
   },
   chickpea: {
     crop: "chickpea",
@@ -82,6 +100,9 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     rainRangeMm: [250, 450],
     phRange: [6, 8],
     soilTypeFit: { sandy: 80, loamy: 90, clay: 60, silty: 85 },
+    calendar: { sowMonths: [3, 4], harvestMonth: 7 },
+    frostTolerant: false,
+    heatStressC: 32,
   },
   lentil: {
     crop: "lentil",
@@ -94,6 +115,9 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     rainRangeMm: [250, 450],
     phRange: [6, 8],
     soilTypeFit: { sandy: 80, loamy: 95, clay: 65, silty: 85 },
+    calendar: { sowMonths: [11, 12], harvestMonth: 6 },
+    frostTolerant: true,
+    heatStressC: 30,
   },
   sunflower: {
     crop: "sunflower",
@@ -106,6 +130,9 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     rainRangeMm: [400, 650],
     phRange: [6, 7.5],
     soilTypeFit: { sandy: 70, loamy: 100, clay: 80, silty: 90 },
+    calendar: { sowMonths: [4, 5], harvestMonth: 9 },
+    frostTolerant: false,
+    heatStressC: 35,
   },
 };
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { fetchPower } from "@/lib/nasa/power";
+import { POWER_PARAMS, fetchPower } from "@/lib/nasa/power";
 
 /** Accepts only non-empty numeric strings inside the given range. */
 const numberInRange = (min: number, max: number) =>
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       source: "NASA POWER (Prediction Of Worldwide Energy Resources)",
       community: "AG",
-      parameters: ["T2M", "PRECTOTCORR"],
+      parameters: POWER_PARAMS,
       location: { lat, lng },
       start,
       end,
