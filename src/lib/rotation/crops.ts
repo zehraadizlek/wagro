@@ -246,8 +246,10 @@ export const COVER_CROP = {
   nitrogenBonus: 0.3,
   /** Added to the organic matter score. */
   soilBonus: 12,
-  /** Subtracted from the water score without irrigation, because covers also use water. */
+  /** Subtracted from the water score without irrigation when monthly data is missing. */
   waterPenalty: 6,
+  /** Share of reference evapotranspiration (ET0) a cover crop uses. */
+  waterFactor: 0.5,
   /** Shortest empty spell, in months, worth filling with a cover crop. */
   minGapMonths: 4,
 };

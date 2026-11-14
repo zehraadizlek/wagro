@@ -245,28 +245,61 @@ function buildSequences(
 
 // ---------- criteria ----------
 
+/**
+ * Water use. With monthly NASA data this is a simple water budget: in each
+ * growing month the crop needs roughly ET0 times a crop factor (from its
+ * relative water demand), and 80% of the rain counts as useful. The yearly
+ * shortfall drives the score. Without monthly data it falls back to the
+ * crops' relative water demand.
+ */
 function waterScore(
   seq: Crop[],
   irrigation: FarmProfile["irrigation"],
   coverCrops: boolean,
   dryClimate: boolean,
+  plan: SeasonPlan,
+  indicators: AgroIndicators | null,
 ) {
   const demand = avg(seq.map((c) => CROP_PARAMS[c].waterDemand));
-  const base = ((5 - demand) / 4) * 100;
   const relief = irrigation === "full" ? 0.5 : irrigation === "limited" ? 0.25 : 0;
-  // Covers use water too; in dry climates without irrigation this matters more.
-  const coverCost =
-    coverCrops && irrigation === "none"
-      ? COVER_CROP.waterPenalty * (dryClimate ? 2 : 1)
-      : 0;
-  const score = clamp(base + (100 - base) * relief - coverCost);
-  const expl =
-    `Average relative water demand is ${demand.toFixed(1)} out of 5. ` +
-    (relief > 0
-      ? "Your irrigation lowers the pressure of high-demand crops."
-      : "With no irrigation, high-demand crops count fully against this score.") +
-    (coverCost ? " Cover crops also use some water, which lowers the score a little." : "");
-  return { score, expl };
+  const reliefText =
+    relief > 0
+      ? " Your irrigation covers part of the shortfall."
+      : " With no irrigation, the whole shortfall counts.";
+
+  if (!indicators) {
+    const base = ((5 - demand) / 4) * 100;
+    const coverCost =
+      coverCrops && irrigation === "none"
+        ? COVER_CROP.waterPenalty * (dryClimate ? 2 : 1)
+        : 0;
+    return {
+      score: clamp(base + (100 - base) * relief - coverCost),
+      expl: `Average relative water demand is ${demand.toFixed(1)} out of 5.${reliefText}`,
+    };
+  }
+
+  let shortfall = 0;
+  for (const cell of plan.cells) {
+    const m = indicators.months[cell.month - 1];
+    if (m.et0Mm === null || m.precipMm === null) continue;
+    const factor = cell.crop
+      ? cell.phase === "harvest"
+        ? 0
+        : 0.4 + 0.2 * CROP_PARAMS[cell.crop].waterDemand
+      : cell.cover
+        ? COVER_CROP.waterFactor
+        : 0;
+    shortfall += Math.max(0, factor * m.et0Mm - 0.8 * m.precipMm);
+  }
+  const perYear = (shortfall / Math.max(1, plan.cycleMonths)) * 12 * (1 - relief);
+  return {
+    score: clamp(100 - perYear / 8),
+    expl:
+      `In a typical year the crops${coverCrops ? " and cover crop" : ""} need about ${Math.round(perYear)} mm more water than the rain gives in their growing months.` +
+      reliefText +
+      " Water stored in the soil from wet months is not counted, so this is a cautious estimate.",
+  };
 }
 
 function nitrogenScore(seq: Crop[], coverCrops: boolean) {
@@ -370,10 +403,48 @@ function incomeScore(seq: Crop[], farm: FarmProfile) {
   };
 }
 
+/**
+ * How hard the growing months usually are for the crop in the field, from
+ * 0 (easy) to 1 (very hard) per month: frost nights, hot days at flowering,
+ * and how far rain falls short of evaporative demand. Graded rather than
+ * yes/no, so warmer or drier scenarios move the score step by step.
+ */
+function seasonalStress(
+  plan: SeasonPlan,
+  indicators: AgroIndicators,
+  irrigation: FarmProfile["irrigation"],
+) {
+  const inField = plan.cells.filter((c) => c.crop);
+  const waterRelief = irrigation === "full" ? 0 : irrigation === "limited" ? 0.5 : 1;
+  let points = 0;
+  let stressedMonths = 0;
+  for (const cell of inField) {
+    const m = indicators.months[cell.month - 1];
+    const p = CROP_PARAMS[cell.crop!];
+    let v = 0;
+    if (cell.flags.includes("frost")) v += Math.min(1, (m.frostDays ?? 0) / 8);
+    if (cell.flags.includes("heat")) v += Math.min(1, (m.heatDays[p.heatStressC] ?? 0) / 8);
+    if (cell.phase !== "harvest" && m.et0Mm !== null && m.precipMm !== null && m.et0Mm >= 60) {
+      const deficit = clamp(1 - m.precipMm / m.et0Mm, 0, 1);
+      v += 0.6 * deficit * waterRelief;
+    }
+    v = Math.min(1, v);
+    if (v >= 0.15) stressedMonths++;
+    points += v;
+  }
+  return {
+    score: clamp(100 - (100 * 1.3 * points) / Math.max(1, inField.length)),
+    stressedMonths,
+    growingMonths: inField.length,
+  };
+}
+
 function climateScore(
   seq: Crop[],
   climate: ClimateInput,
   irrigation: FarmProfile["irrigation"],
+  plan: SeasonPlan,
+  indicators: AgroIndicators | null,
 ) {
   if (!climate)
     return {
@@ -388,10 +459,16 @@ function climateScore(
       score: null as number | null,
       expl: "Climate data had no usable values, so this criterion is left out.",
     };
+  if (!indicators)
+    return {
+      score: avg(fits),
+      expl:
+        "Compares the last year of temperature and rainfall at your location with assumed crop ranges. Monthly data was missing, so seasonal frost, heat and drought are not included.",
+    };
+  const season = seasonalStress(plan, indicators, irrigation);
   return {
-    score: avg(fits),
-    expl:
-      "Compares the last year of temperature and rainfall at your location with assumed crop ranges. It is a rough guide only, because it uses annual values, not growing-season values.",
+    score: 0.5 * avg(fits) + 0.5 * season.score,
+    expl: `Half comes from how last year's average temperature and rain match each crop. Half comes from the growing months: ${season.stressedMonths} of ${season.growingMonths} usually bring frost, heat or drought for the crop in the field.`,
   };
 }
 
@@ -587,12 +664,12 @@ export function evaluateStrategies(
     const plan = buildSeasonPlan(seq, indicators, farm, { cover: coverCrops });
 
     const parts: Record<CriterionId, { score: number | null; expl: string }> = {
-      water: waterScore(seq, farm.irrigation, coverCrops, dryClimate),
+      water: waterScore(seq, farm.irrigation, coverCrops, dryClimate, plan, indicators),
       nitrogen: nitrogenScore(seq, coverCrops),
       soilHealth: soilScore(seq, coverCrops),
       diversity: diversityScore(seq),
       erosion: erosionScore(plan, hasMonthly),
-      climate: climateScore(seq, hasClimate ? climate : null, farm.irrigation),
+      climate: climateScore(seq, hasClimate ? climate : null, farm.irrigation, plan, indicators),
       soilFit: soilFitScore(seq, farm),
       income: incomeScore(seq, farm),
     };
@@ -641,7 +718,7 @@ export function evaluateStrategies(
     ];
     if (hasClimate)
       reasons.push(
-        "Climate comparison uses last year's gridded values against annual ranges, which is only a rough guide.",
+        "Climate fit uses gridded estimates for the area around your pin, not measurements in your field.",
       );
     else reasons.push("No climate data was available for this run.");
 

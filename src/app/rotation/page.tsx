@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -15,8 +15,15 @@ import {
 import PageHeader from "@/components/ui/PageHeader";
 import RecommendationCard from "@/components/rotation/RecommendationCard";
 import CropRoles from "@/components/rotation/CropRoles";
+import ScenarioPanel from "@/components/rotation/ScenarioPanel";
 import SeasonTimeline from "@/components/rotation/SeasonTimeline";
 import StrategyCards from "@/components/rotation/StrategyCards";
+import {
+  NO_CHANGE,
+  isNoChange,
+  scenarioClimate,
+  type Scenario,
+} from "@/lib/nasa/scenario";
 import { useClimate } from "@/lib/nasa/use-climate";
 import { CROP_PARAMS } from "@/lib/rotation/crops";
 import {
@@ -140,11 +147,29 @@ export default function Page() {
   const { farm, ready } = useFarm();
   const climate = useClimate(farm);
 
-  const results = useMemo(() => {
+  const [scenario, setScenario] = useState<Scenario>(NO_CHANGE);
+  // Keeps the sliders smooth while the scores are recalculated.
+  const activeScenario = useDeferredValue(scenario);
+
+  const baseResults = useMemo(() => {
     if (!farm || climate.status === "loading" || climate.status === "idle")
       return null;
     return evaluateStrategies(farm, climate.summary, climate.indicators);
   }, [farm, climate.status, climate.summary, climate.indicators]);
+
+  // Same daily record, shifted by the scenario.
+  const shiftedClimate = useMemo(() => {
+    if (!farm || !climate.record || isNoChange(activeScenario)) return null;
+    const r = climate.record;
+    return scenarioClimate(r.points, activeScenario, farm.latitude, r.elevationM, r.retrievedAt);
+  }, [farm, climate.record, activeScenario]);
+
+  const results = useMemo(() => {
+    if (!farm || !baseResults || !shiftedClimate) return baseResults;
+    return evaluateStrategies(farm, shiftedClimate.summary, shiftedClimate.indicators);
+  }, [farm, baseResults, shiftedClimate]);
+
+  const indicators = shiftedClimate?.indicators ?? climate.indicators;
 
   const rec = useMemo(
     () => (farm && results ? buildRecommendation(farm, results) : null),
@@ -209,13 +234,21 @@ export default function Page() {
             </div>
           )}
 
+          <ScenarioPanel
+            scenario={scenario}
+            onChange={setScenario}
+            base={baseResults!}
+            shifted={results}
+            disabled={!climate.record}
+          />
+
           {rec && <RecommendationCard rec={rec} results={results} />}
 
           <StrategyCards results={results} bestId={bestId} />
 
           <SeasonTimeline
             results={results}
-            indicators={climate.indicators}
+            indicators={indicators}
             farm={farm!}
           />
 

@@ -3,24 +3,27 @@
 import { useEffect, useState } from "react";
 import type { FarmProfile } from "@/lib/schemas/farm";
 import { computeIndicators, type AgroIndicators } from "./indicators";
-import { summarize, type DailyPoint } from "./power";
+import type { DailyPoint } from "./power";
 import { rangeFor } from "./range";
+import { lastYearSummary, type ClimateSummary } from "./scenario";
+
+export type { ClimateSummary } from "./scenario";
 
 /** Years of history used for the monthly climatology. */
 export const CLIMATOLOGY_YEARS = 10;
 
-export type ClimateSummary = {
-  meanTemp: number | null;
-  /** Total precipitation scaled to a full year, using only days with data. */
-  annualPrecipMm: number | null;
-  days: number;
-  missingDays: number;
-  start: string;
-  end: string;
+/** The daily record behind the summary, kept for scenarios. */
+export type ClimateRecord = {
+  points: DailyPoint[];
+  elevationM: number | null;
   retrievedAt: string;
 };
 
-type Payload = { summary: ClimateSummary; indicators: AgroIndicators };
+type Payload = {
+  summary: ClimateSummary;
+  indicators: AgroIndicators;
+  record: ClimateRecord;
+};
 type Result = { key: string; data?: Payload; error?: string };
 
 export type ClimateState = {
@@ -29,6 +32,8 @@ export type ClimateState = {
   summary: ClimateSummary | null;
   /** Monthly climatology and indicators over the last 10 years. */
   indicators: AgroIndicators | null;
+  /** Daily record, for "what if" scenarios. */
+  record: ClimateRecord | null;
   error: string | null;
 };
 
@@ -54,25 +59,13 @@ export function useClimate(farm: FarmProfile | null): ClimateState {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Request failed");
         const points = json.points as DailyPoint[];
-        const lastYear = points.slice(-365);
-        const s = summarize(lastYear);
-        const precipDays = s.days - s.missingPrecipDays;
+        const elevationM = (json.elevationM as number | null) ?? null;
         setResult({
           key,
           data: {
-            summary: {
-              meanTemp: s.meanTemp,
-              annualPrecipMm:
-                s.totalPrecip === null || precipDays <= 0
-                  ? null
-                  : (s.totalPrecip / precipDays) * 365,
-              days: s.days,
-              missingDays: Math.max(s.missingTempDays, s.missingPrecipDays),
-              start: lastYear[0]?.date ?? json.start,
-              end: lastYear[lastYear.length - 1]?.date ?? json.end,
-              retrievedAt: json.retrievedAt,
-            },
-            indicators: computeIndicators(points, lat, json.elevationM ?? null),
+            summary: lastYearSummary(points, json.retrievedAt),
+            indicators: computeIndicators(points, lat, elevationM),
+            record: { points, elevationM, retrievedAt: json.retrievedAt },
           },
         });
       })
@@ -87,7 +80,7 @@ export function useClimate(farm: FarmProfile | null): ClimateState {
     return () => controller.abort();
   }, [lat, lng, key]);
 
-  const empty = { summary: null, indicators: null };
+  const empty = { summary: null, indicators: null, record: null };
   if (!farm) return { status: "idle", ...empty, error: null };
   const current = result && result.key === key ? result : null;
   if (!current) return { status: "loading", ...empty, error: null };
@@ -97,6 +90,7 @@ export function useClimate(farm: FarmProfile | null): ClimateState {
     status: "done",
     summary: current.data.summary,
     indicators: current.data.indicators,
+    record: current.data.record,
     error: null,
   };
 }
