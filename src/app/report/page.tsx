@@ -22,6 +22,7 @@ import {
   evaluateStrategies,
 } from "@/lib/rotation/engine";
 import { useFarm } from "@/lib/storage/use-farm";
+import { useTerrain } from "@/lib/terrain/use-terrain";
 
 const COLORS = ["#8b7355", "#7d8f69", "#3f4a3a", "#b9a77f"];
 const label = (s: string) =>
@@ -54,12 +55,19 @@ function Row({ k, v }: { k: string; v: string }) {
 export default function Page() {
   const { farm, ready } = useFarm();
   const climate = useClimate(farm);
+  const field = useTerrain(farm);
+  const slope = field.terrain?.meanSlopePct ?? null;
 
   const results = useMemo(() => {
     if (!farm || climate.status === "loading" || climate.status === "idle")
       return null;
-    return evaluateStrategies(farm, climate.summary, climate.indicators);
-  }, [farm, climate.status, climate.summary, climate.indicators]);
+    return evaluateStrategies(
+      farm,
+      climate.summary,
+      climate.indicators,
+      slope === null ? null : { meanSlopePct: slope },
+    );
+  }, [farm, climate.status, climate.summary, climate.indicators, slope]);
 
   const rec = useMemo(
     () => (farm && results ? buildRecommendation(farm, results) : null),
@@ -193,6 +201,7 @@ export default function Page() {
       <Section title="3. Soil (entered by you)">
         <Row k="Soil type" v={label(farm.soilType)} />
         <Row k="Soil pH" v={farm.soilPh === null ? "Not entered" : String(farm.soilPh)} />
+        <Row k="Average slope (elevation data)" v={slope === null ? "Not available" : `${slope.toFixed(1)}%`} />
         <p className="mt-3 text-xs text-muted">
           No satellite or database soil data is used in this version. Soil
           values come only from you.
@@ -287,6 +296,8 @@ export default function Page() {
             reanalysis and CERES satellite products.
           </li>
           <li>Evapotranspiration: computed by Wagro with the FAO-56 Penman-Monteith method from the values above.</li>
+          <li>Satellite maps and plant cover: NASA GIBS imagery of MODIS (vegetation index, land surface temperature), SMAP (root-zone soil moisture) and GRACE/GRACE-FO (water storage).</li>
+          <li>Slope and low spots: AWS Terrain Tiles elevation data (NASA SRTM where available, other elevation models elsewhere), about 30 m detail.</li>
           <li>Farm and soil details: entered by the user, not verified.</li>
           <li>Crop parameters: prototype assumptions made by the project team.</li>
           <li>Map tiles: OpenStreetMap contributors.</li>

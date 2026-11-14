@@ -364,11 +364,17 @@ function diversityScore(seq: Crop[]) {
   };
 }
 
-function erosionScore(plan: SeasonPlan, hasMonthly: boolean) {
+/** Field terrain the scores can use; null when elevation data is missing. */
+export type TerrainInput = { meanSlopePct: number } | null;
+
+function erosionScore(plan: SeasonPlan, hasMonthly: boolean, terrain: TerrainInput) {
   const cycle = Math.max(1, plan.cycleMonths);
   const bareShare = plan.bareMonths / cycle;
   const exposedShare = plan.exposedMonths / cycle;
-  const score = clamp(100 - 100 * (0.7 * bareShare + 1.5 * exposedShare));
+  // Bare soil on a slope washes away faster: from 2% slope up, the exposure
+  // counts more, up to double at 22% and steeper.
+  const slopeFactor = terrain ? 1 + clamp((terrain.meanSlopePct - 2) / 20, 0, 1) : 1;
+  const score = clamp(100 - 100 * slopeFactor * (0.7 * bareShare + 1.5 * exposedShare));
   const covered = plan.gaps.reduce((a, g) => a + g.coveredMonths, 0);
   const expl =
     `The soil is bare for ${plan.bareMonths} of ${plan.cycleMonths} months` +
@@ -376,7 +382,11 @@ function erosionScore(plan: SeasonPlan, hasMonthly: boolean) {
       ? `, and ${plan.exposedMonths} of those usually get heavy or above-demand rain.`
       : ". Monthly rain was not available, so rainy months could not be singled out.") +
     (covered ? ` A cover crop protects the soil for ${covered} months.` : "") +
-    " Slope is not known yet, so steep fields may be at more risk than this shows.";
+    (terrain
+      ? ` Your field's average slope is ${terrain.meanSlopePct.toFixed(1)}%${
+          slopeFactor > 1.05 ? ", which makes bare months count more." : "."
+        }`
+      : " Slope is not known, so steep fields may be at more risk than this shows.");
   return { score, expl };
 }
 
@@ -604,6 +614,7 @@ function knowledgeGaps(
   hasClimate: boolean,
   hasMonthly: boolean,
   hasSoil: boolean,
+  hasTerrain: boolean,
   pool: Pool,
 ): string[] {
   const out: string[] = [];
@@ -613,7 +624,9 @@ function knowledgeGaps(
   else out.push("No soil test: soil fit uses only the type and pH you entered.");
   if (!hasClimate || !hasMonthly)
     out.push("Weather data is missing, so climate and seasonal risks are incomplete.");
-  out.push("No slope data yet, so erosion risk on steep fields is underestimated.");
+  if (!hasTerrain)
+    out.push("No slope data, so erosion risk on steep fields may be underestimated.");
+  else out.push("Slope comes from 30 m elevation data; small banks and gullies are not seen.");
   if (id === "cover")
     out.push("How much water the cover crop uses depends on each year's rain.");
   out.push("Yields, prices and local pest pressure are not included.");
@@ -626,6 +639,7 @@ export function evaluateStrategies(
   farm: FarmProfile,
   climate: ClimateInput,
   indicators: AgroIndicators | null = null,
+  terrain: TerrainInput = null,
 ): StrategyResult[] {
   const hasClimate =
     !!climate &&
@@ -646,6 +660,7 @@ export function evaluateStrategies(
       ? "NASA POWER: 10 years of monthly rain, frost, heat and evaporation."
       : null,
     hasSoil ? "The soil type and pH you entered." : null,
+    terrain ? "Elevation data: the slope of your field." : null,
     "Crop values for water, nitrogen, soil and calendar (first estimates).",
   ].filter((e): e is string => e !== null);
 
@@ -668,7 +683,7 @@ export function evaluateStrategies(
       nitrogen: nitrogenScore(seq, coverCrops),
       soilHealth: soilScore(seq, coverCrops),
       diversity: diversityScore(seq),
-      erosion: erosionScore(plan, hasMonthly),
+      erosion: erosionScore(plan, hasMonthly, terrain),
       climate: climateScore(seq, hasClimate ? climate : null, farm.irrigation, plan, indicators),
       soilFit: soilFitScore(seq, farm),
       income: incomeScore(seq, farm),
@@ -737,7 +752,7 @@ export function evaluateStrategies(
       why: whyText(id, seq, pool, coverCrops),
       evidence,
       benefits: benefits.length ? benefits : ["No clear strength under these rules."],
-      gaps: knowledgeGaps(id, hasClimate, hasMonthly, hasSoil, pool),
+      gaps: knowledgeGaps(id, hasClimate, hasMonthly, hasSoil, !!terrain, pool),
       localReview: localChecks(id, seq, plan, coverCrops, farm.hasRowPlanter),
     };
   });

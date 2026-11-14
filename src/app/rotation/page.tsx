@@ -9,6 +9,11 @@ import ScenarioPanel from "@/components/rotation/ScenarioPanel";
 import SeasonTimeline from "@/components/rotation/SeasonTimeline";
 import StrategyCards from "@/components/rotation/StrategyCards";
 import PageHeader from "@/components/ui/PageHeader";
+import dynamic from "next/dynamic";
+
+const SatelliteMap = dynamic(() => import("@/components/space/SatelliteMap"), { ssr: false });
+const PlantGrowth = dynamic(() => import("@/components/space/PlantGrowth"), { ssr: false });
+const FieldRiskMap = dynamic(() => import("@/components/space/FieldRiskMap"), { ssr: false });
 import {
   NO_CHANGE,
   isNoChange,
@@ -18,10 +23,16 @@ import {
 import { useClimate } from "@/lib/nasa/use-climate";
 import { CRITERION_MEANING, buildRecommendation, evaluateStrategies } from "@/lib/rotation/engine";
 import { useFarm } from "@/lib/storage/use-farm";
+import { useTerrain } from "@/lib/terrain/use-terrain";
 
 export default function Page() {
   const { farm, ready } = useFarm();
   const climate = useClimate(farm);
+  const field = useTerrain(farm);
+  const terrainInput = useMemo(
+    () => (field.terrain ? { meanSlopePct: field.terrain.meanSlopePct } : null),
+    [field.terrain],
+  );
 
   const [scenario, setScenario] = useState<Scenario>(NO_CHANGE);
   // Keeps the sliders smooth while the scores are recalculated.
@@ -30,8 +41,8 @@ export default function Page() {
   const baseResults = useMemo(() => {
     if (!farm || climate.status === "loading" || climate.status === "idle")
       return null;
-    return evaluateStrategies(farm, climate.summary, climate.indicators);
-  }, [farm, climate.status, climate.summary, climate.indicators]);
+    return evaluateStrategies(farm, climate.summary, climate.indicators, terrainInput);
+  }, [farm, climate.status, climate.summary, climate.indicators, terrainInput]);
 
   // Same daily record, shifted by the scenario.
   const shiftedClimate = useMemo(() => {
@@ -42,8 +53,8 @@ export default function Page() {
 
   const results = useMemo(() => {
     if (!farm || !baseResults || !shiftedClimate) return baseResults;
-    return evaluateStrategies(farm, shiftedClimate.summary, shiftedClimate.indicators);
-  }, [farm, baseResults, shiftedClimate]);
+    return evaluateStrategies(farm, shiftedClimate.summary, shiftedClimate.indicators, terrainInput);
+  }, [farm, baseResults, shiftedClimate, terrainInput]);
 
   const indicators = shiftedClimate?.indicators ?? climate.indicators;
 
@@ -94,9 +105,20 @@ export default function Page() {
 
           {indicators && <GrowingConditions ind={indicators} />}
 
+          <FieldRiskMap
+            lat={farm.latitude}
+            lng={farm.longitude}
+            terrain={field.terrain}
+            status={field.status}
+          />
+
           <StrategyCards results={results} bestId={bestId} />
 
           <SeasonTimeline results={results} indicators={indicators} farm={farm} />
+
+          <PlantGrowth lat={farm.latitude} lng={farm.longitude} />
+
+          <SatelliteMap lat={farm.latitude} lng={farm.longitude} />
 
           <ScenarioPanel
             scenario={scenario}
