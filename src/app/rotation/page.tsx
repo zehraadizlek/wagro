@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
 import GrowingConditions from "@/components/climate/GrowingConditions";
+import LastTenYears from "@/components/climate/LastTenYears";
 import CropRoles from "@/components/rotation/CropRoles";
 import RecommendationCard from "@/components/rotation/RecommendationCard";
 import ScenarioPanel from "@/components/rotation/ScenarioPanel";
@@ -105,6 +106,10 @@ export default function Page() {
 
           {indicators && <GrowingConditions ind={indicators} />}
 
+          {climate.record && (
+            <LastTenYears record={climate.record} farm={farm} terrain={terrainInput} />
+          )}
+
           <FieldRiskMap
             lat={farm.latitude}
             lng={farm.longitude}
@@ -176,7 +181,10 @@ export default function Page() {
 
           <p className="text-sm text-muted">
             Wagro helps you think it through. Your own experience and a local
-            adviser should have the final say.
+            adviser should have the final say.{" "}
+            <Link href="/how" className="underline hover:text-espresso">
+              How Wagro works
+            </Link>
           </p>
 
           <div className="grid grid-cols-2 gap-3">

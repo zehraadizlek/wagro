@@ -52,7 +52,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       <footer className="mx-auto max-w-6xl border-t border-line px-5 py-6 text-xs text-muted">
         Wagro is a prototype built for NASA Space Apps Challenge 2026. It does
-        not replace professional agronomic advice.
+        not replace professional agronomic advice.{" "}
+        <Link href="/how" className="underline hover:text-espresso">
+          How Wagro works
+        </Link>
       </footer>
     </div>
   );
