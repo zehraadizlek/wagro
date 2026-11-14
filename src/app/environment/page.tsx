@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -15,8 +15,8 @@ import {
 } from "recharts";
 import PageHeader from "@/components/ui/PageHeader";
 import type { DailyPoint, PowerSummary } from "@/lib/nasa/power";
-import type { FarmProfile } from "@/lib/schemas/farm";
-import { loadFarm } from "@/lib/storage/farm-storage";
+import { rangeFor } from "@/lib/nasa/range";
+import { useFarm } from "@/lib/storage/use-farm";
 
 type ApiData = {
   source: string;
@@ -27,25 +27,13 @@ type ApiData = {
   summary: PowerSummary;
 };
 
+type Result = { key: string; data?: ApiData; error?: string };
+
 const RANGES = [
   { years: 1, label: "Last 1 year" },
   { years: 2, label: "Last 2 years" },
   { years: 3, label: "Last 3 years" },
 ];
-
-function ymd(d: Date): string {
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  return `${d.getUTCFullYear()}${m}${day}`;
-}
-
-function rangeFor(years: number) {
-  const end = new Date();
-  end.setUTCDate(end.getUTCDate() - 7);
-  const start = new Date(end);
-  start.setUTCFullYear(start.getUTCFullYear() - years);
-  return { start: ymd(start), end: ymd(end) };
-}
 
 const fmt = (v: number | null, digits = 1) =>
   v === null ? "n/a" : v.toFixed(digits);
@@ -75,26 +63,20 @@ function Stat({
 }
 
 export default function Page() {
-  const [farm, setFarm] = useState<FarmProfile | null>(null);
-  const [ready, setReady] = useState(false);
+  const { farm, ready } = useFarm();
   const [years, setYears] = useState(1);
-  const [status, setStatus] = useState<"idle" | "loading" | "error" | "done">(
-    "idle",
-  );
-  const [error, setError] = useState("");
-  const [data, setData] = useState<ApiData | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const [result, setResult] = useState<Result | null>(null);
 
-  useEffect(() => {
-    setFarm(loadFarm());
-    setReady(true);
-  }, []);
+  // Identifies the request that the current inputs would make.
+  const key = farm
+    ? `${farm.latitude}|${farm.longitude}|${years}|${attempt}`
+    : "";
 
   useEffect(() => {
     if (!farm) return;
     const controller = new AbortController();
     const { start, end } = rangeFor(years);
-    setStatus("loading");
-    setError("");
 
     fetch(
       `/api/nasa-power?lat=${farm.latitude}&lng=${farm.longitude}&start=${start}&end=${end}`,
@@ -103,17 +85,28 @@ export default function Page() {
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Request failed");
-        setData(json as ApiData);
-        setStatus("done");
+        setResult({ key, data: json as ApiData });
       })
       .catch((e: unknown) => {
         if (e instanceof DOMException && e.name === "AbortError") return;
-        setError(e instanceof Error ? e.message : "Something went wrong");
-        setStatus("error");
+        setResult({
+          key,
+          error: e instanceof Error ? e.message : "Something went wrong",
+        });
       });
 
     return () => controller.abort();
-  }, [farm, years]);
+  }, [farm, years, key]);
+
+  const current = result && result.key === key ? result : null;
+  const status = !farm
+    ? "idle"
+    : !current
+      ? "loading"
+      : current.error
+        ? "error"
+        : "done";
+  const data = current?.data ?? null;
 
   const tick = { fontSize: 12, fill: "#7a6352" };
 
@@ -131,7 +124,9 @@ export default function Page() {
 
       {ready && !farm && (
         <div className="rounded-[28px] border border-line bg-paper p-8">
-          <p className="text-lg">Save your farm profile first so we know where to look.</p>
+          <p className="text-lg">
+            Save your farm profile first so we know where to look.
+          </p>
           <Link
             href="/farm"
             className="mt-5 inline-block rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-paper hover:bg-terracotta-dark"
@@ -145,7 +140,8 @@ export default function Page() {
         <>
           <div className="mb-6 flex flex-wrap items-center gap-2">
             <span className="mr-2 text-sm text-muted">
-              {farm.name} at {farm.latitude.toFixed(3)}, {farm.longitude.toFixed(3)}
+              {farm.name} at {farm.latitude.toFixed(3)},{" "}
+              {farm.longitude.toFixed(3)}
             </span>
             {RANGES.map((r) => (
               <button
@@ -174,12 +170,12 @@ export default function Page() {
               <p className="font-medium text-terracotta">
                 Could not load NASA POWER data
               </p>
-              <p className="mt-1 text-sm text-muted">{error}</p>
+              <p className="mt-1 text-sm text-muted">{current?.error}</p>
               <button
-                onClick={() => setYears((y) => y)}
+                onClick={() => setAttempt((a) => a + 1)}
                 className="mt-4 rounded-full border border-espresso px-4 py-1.5 text-sm hover:bg-espresso hover:text-paper"
               >
-                Pick a range again to retry
+                Try again
               </button>
             </div>
           )}
@@ -214,7 +210,9 @@ export default function Page() {
               </div>
 
               <section className="rounded-[28px] border border-line bg-paper p-6">
-                <h2 className="font-display text-3xl">Daily temperature (T2M)</h2>
+                <h2 className="font-display text-3xl">
+                  Daily temperature (T2M)
+                </h2>
                 <p className="mb-4 text-sm text-muted">
                   Mean air temperature at 2 m, in °C. Gaps mean no data.
                 </p>

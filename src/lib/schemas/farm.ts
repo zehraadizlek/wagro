@@ -31,24 +31,32 @@ export const PRIORITIES = [
 export type Priority = (typeof PRIORITIES)[number];
 
 export const farmProfileSchema = z.object({
-  name: z.string().trim().min(1, "Farm name is required").max(80),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Farm name is required")
+    .max(80, "Farm name must be 80 characters or fewer"),
   latitude: z
     .number({ message: "Pick a location on the map" })
-    .min(-90)
-    .max(90),
+    .min(-90, "Latitude must be between -90 and 90")
+    .max(90, "Latitude must be between -90 and 90"),
   longitude: z
     .number({ message: "Pick a location on the map" })
-    .min(-180)
-    .max(180),
+    .min(-180, "Longitude must be between -180 and 180")
+    .max(180, "Longitude must be between -180 and 180"),
   areaHa: z
     .number({ message: "Enter the farm area" })
     .positive("Area must be greater than 0")
-    .max(100000),
+    .max(100000, "Area must be 100000 ha or less"),
   currentCrop: z.enum(CROPS),
-  previousCrops: z.array(z.enum(CROPS)).max(5),
+  previousCrops: z.array(z.enum(CROPS)).max(5, "Choose at most 5 previous crops"),
   irrigation: z.enum(IRRIGATION),
   soilType: z.enum(SOIL_TYPES),
-  soilPh: z.number().min(3).max(10).nullable(),
+  soilPh: z
+    .number({ message: "Enter pH as a number, for example 6.8" })
+    .min(3, "pH must be between 3 and 10")
+    .max(10, "pH must be between 3 and 10")
+    .nullable(),
   priorities: z.array(z.enum(PRIORITIES)),
 });
 

@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import {
   CROPS,
@@ -9,8 +9,10 @@ import {
   PRIORITIES,
   SOIL_TYPES,
   farmProfileSchema,
+  type FarmProfile,
 } from "@/lib/schemas/farm";
-import { loadFarm, saveFarm } from "@/lib/storage/farm-storage";
+import { saveFarm } from "@/lib/storage/farm-storage";
+import { useFarm } from "@/lib/storage/use-farm";
 
 const LocationPicker = dynamic(
   () => import("@/components/map/LocationPicker"),
@@ -71,34 +73,32 @@ function Field({
   );
 }
 
-export default function Page() {
-  const [name, setName] = useState("");
-  const [lat, setLat] = useState("");
-  const [lng, setLng] = useState("");
-  const [area, setArea] = useState("");
-  const [currentCrop, setCurrentCrop] = useState<string>("wheat");
-  const [previousCrops, setPreviousCrops] = useState<string[]>([]);
-  const [irrigation, setIrrigation] = useState<string>("none");
-  const [soilType, setSoilType] = useState<string>("unknown");
-  const [soilPh, setSoilPh] = useState("");
-  const [priorities, setPriorities] = useState<string[]>([]);
+function FarmForm({ initial }: { initial: FarmProfile | null }) {
+  const [name, setName] = useState(initial?.name ?? "");
+  const [lat, setLat] = useState(initial ? String(initial.latitude) : "");
+  const [lng, setLng] = useState(initial ? String(initial.longitude) : "");
+  const [area, setArea] = useState(initial ? String(initial.areaHa) : "");
+  const [currentCrop, setCurrentCrop] = useState<string>(
+    initial?.currentCrop ?? "wheat",
+  );
+  const [previousCrops, setPreviousCrops] = useState<string[]>(
+    initial?.previousCrops ?? [],
+  );
+  const [irrigation, setIrrigation] = useState<string>(
+    initial?.irrigation ?? "none",
+  );
+  const [soilType, setSoilType] = useState<string>(
+    initial?.soilType ?? "unknown",
+  );
+  const [soilPh, setSoilPh] = useState(
+    initial && initial.soilPh !== null ? String(initial.soilPh) : "",
+  );
+  const [priorities, setPriorities] = useState<string[]>(
+    initial?.priorities ?? [],
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    const f = loadFarm();
-    if (!f) return;
-    setName(f.name);
-    setLat(String(f.latitude));
-    setLng(String(f.longitude));
-    setArea(String(f.areaHa));
-    setCurrentCrop(f.currentCrop);
-    setPreviousCrops(f.previousCrops);
-    setIrrigation(f.irrigation);
-    setSoilType(f.soilType);
-    setSoilPh(f.soilPh === null ? "" : String(f.soilPh));
-    setPriorities(f.priorities);
-  }, []);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   const latN = toNum(lat);
   const lngN = toNum(lng);
@@ -111,6 +111,7 @@ export default function Page() {
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaved(false);
+    setSaveFailed(false);
     const result = farmProfileSchema.safeParse({
       name,
       latitude: latN,
@@ -133,9 +134,164 @@ export default function Page() {
       return;
     }
     setErrors({});
-    saveFarm(result.data);
-    setSaved(true);
+    if (saveFarm(result.data)) setSaved(true);
+    else setSaveFailed(true);
   }
+
+  return (
+    <form onSubmit={onSubmit} className="grid gap-6 md:grid-cols-2">
+      <section className="rise space-y-5 rounded-[28px] border border-line bg-paper p-6">
+        <Field title="Farm name" error={errors.name}>
+          <input
+            className={input}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. North field"
+          />
+        </Field>
+        <Field title="Area (hectares)" error={errors.areaHa}>
+          <input
+            className={input}
+            inputMode="decimal"
+            value={area}
+            onChange={(e) => setArea(e.target.value)}
+            placeholder="e.g. 25"
+          />
+        </Field>
+        <Field title="Current crop">
+          <div className="flex flex-wrap gap-2">
+            {CROPS.map((c) => (
+              <Chip
+                key={c}
+                active={currentCrop === c}
+                onClick={() => setCurrentCrop(c)}
+              >
+                {label(c)}
+              </Chip>
+            ))}
+          </div>
+        </Field>
+        <Field
+          title="Previous crops (optional, up to 5, oldest first)"
+          error={errors.previousCrops}
+        >
+          <div className="flex flex-wrap gap-2">
+            {CROPS.map((c) => (
+              <Chip
+                key={c}
+                active={previousCrops.includes(c)}
+                onClick={() => toggle(previousCrops, c, setPreviousCrops)}
+              >
+                {label(c)}
+              </Chip>
+            ))}
+          </div>
+        </Field>
+        <Field title="Irrigation">
+          <div className="flex flex-wrap gap-2">
+            {IRRIGATION.map((c) => (
+              <Chip
+                key={c}
+                active={irrigation === c}
+                onClick={() => setIrrigation(c)}
+              >
+                {label(c)}
+              </Chip>
+            ))}
+          </div>
+        </Field>
+        <Field title="Soil type (entered by you)">
+          <div className="flex flex-wrap gap-2">
+            {SOIL_TYPES.map((c) => (
+              <Chip
+                key={c}
+                active={soilType === c}
+                onClick={() => setSoilType(c)}
+              >
+                {label(c)}
+              </Chip>
+            ))}
+          </div>
+        </Field>
+        <Field title="Soil pH (optional)" error={errors.soilPh}>
+          <input
+            className={input}
+            inputMode="decimal"
+            value={soilPh}
+            onChange={(e) => setSoilPh(e.target.value)}
+            placeholder="e.g. 6.8"
+          />
+        </Field>
+        <Field title="Priorities">
+          <div className="flex flex-wrap gap-2">
+            {PRIORITIES.map((c) => (
+              <Chip
+                key={c}
+                active={priorities.includes(c)}
+                onClick={() => toggle(priorities, c, setPriorities)}
+              >
+                {label(c)}
+              </Chip>
+            ))}
+          </div>
+        </Field>
+      </section>
+
+      <section
+        style={{ animationDelay: "100ms" }}
+        className="rise space-y-5 rounded-[28px] border border-line bg-sage/50 p-6 md:self-start"
+      >
+        <Field title="Location: click the map to place your pin">
+          <LocationPicker
+            position={position}
+            onPick={(a, b) => {
+              setLat(a.toFixed(4));
+              setLng(b.toFixed(4));
+            }}
+          />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field title="Latitude" error={errors.latitude}>
+            <input
+              className={input}
+              inputMode="decimal"
+              value={lat}
+              onChange={(e) => setLat(e.target.value)}
+            />
+          </Field>
+          <Field title="Longitude" error={errors.longitude}>
+            <input
+              className={input}
+              inputMode="decimal"
+              value={lng}
+              onChange={(e) => setLng(e.target.value)}
+            />
+          </Field>
+        </div>
+        <button
+          type="submit"
+          className="w-full rounded-full bg-terracotta px-6 py-3 text-base font-semibold text-paper transition-all duration-200 hover:-translate-y-0.5 hover:bg-terracotta-dark hover:shadow-[0_10px_24px_rgba(184,72,31,0.3)] active:translate-y-0"
+        >
+          Save farm profile
+        </button>
+        {saved && (
+          <p className="rounded-2xl border border-olive/30 bg-paper px-4 py-2 text-sm text-olive">
+            Saved in this browser.
+          </p>
+        )}
+        {saveFailed && (
+          <p className="rounded-2xl border border-terracotta/40 bg-paper px-4 py-2 text-sm text-terracotta">
+            Your browser blocked saving. Turn off private mode or allow site
+            data, then try again.
+          </p>
+        )}
+      </section>
+    </form>
+  );
+}
+
+export default function Page() {
+  const { farm, ready } = useFarm();
 
   return (
     <>
@@ -148,148 +304,11 @@ export default function Page() {
         }
         description="Tell us about your farm and drop a pin on the map. Everything is saved in your browser only."
       />
-      <form onSubmit={onSubmit} className="grid gap-6 md:grid-cols-2">
-        <section className="rise space-y-5 rounded-[28px] border border-line bg-paper p-6">
-          <Field title="Farm name" error={errors.name}>
-            <input
-              className={input}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. North field"
-            />
-          </Field>
-          <Field title="Area (hectares)" error={errors.areaHa}>
-            <input
-              className={input}
-              inputMode="decimal"
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-              placeholder="e.g. 25"
-            />
-          </Field>
-          <Field title="Current crop">
-            <div className="flex flex-wrap gap-2">
-              {CROPS.map((c) => (
-                <Chip
-                  key={c}
-                  active={currentCrop === c}
-                  onClick={() => setCurrentCrop(c)}
-                >
-                  {label(c)}
-                </Chip>
-              ))}
-            </div>
-          </Field>
-          <Field
-            title="Previous crops (optional, up to 5)"
-            error={errors.previousCrops}
-          >
-            <div className="flex flex-wrap gap-2">
-              {CROPS.map((c) => (
-                <Chip
-                  key={c}
-                  active={previousCrops.includes(c)}
-                  onClick={() => toggle(previousCrops, c, setPreviousCrops)}
-                >
-                  {label(c)}
-                </Chip>
-              ))}
-            </div>
-          </Field>
-          <Field title="Irrigation">
-            <div className="flex flex-wrap gap-2">
-              {IRRIGATION.map((c) => (
-                <Chip
-                  key={c}
-                  active={irrigation === c}
-                  onClick={() => setIrrigation(c)}
-                >
-                  {label(c)}
-                </Chip>
-              ))}
-            </div>
-          </Field>
-          <Field title="Soil type (entered by you)">
-            <div className="flex flex-wrap gap-2">
-              {SOIL_TYPES.map((c) => (
-                <Chip
-                  key={c}
-                  active={soilType === c}
-                  onClick={() => setSoilType(c)}
-                >
-                  {label(c)}
-                </Chip>
-              ))}
-            </div>
-          </Field>
-          <Field title="Soil pH (optional)" error={errors.soilPh}>
-            <input
-              className={input}
-              inputMode="decimal"
-              value={soilPh}
-              onChange={(e) => setSoilPh(e.target.value)}
-              placeholder="e.g. 6.8"
-            />
-          </Field>
-          <Field title="Priorities">
-            <div className="flex flex-wrap gap-2">
-              {PRIORITIES.map((c) => (
-                <Chip
-                  key={c}
-                  active={priorities.includes(c)}
-                  onClick={() => toggle(priorities, c, setPriorities)}
-                >
-                  {label(c)}
-                </Chip>
-              ))}
-            </div>
-          </Field>
-        </section>
-
-        <section
-          style={{ animationDelay: "100ms" }}
-          className="rise space-y-5 rounded-[28px] border border-line bg-sage/50 p-6 md:self-start"
-        >
-          <Field title="Location: click the map to place your pin">
-            <LocationPicker
-              position={position}
-              onPick={(a, b) => {
-                setLat(a.toFixed(4));
-                setLng(b.toFixed(4));
-              }}
-            />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field title="Latitude" error={errors.latitude}>
-              <input
-                className={input}
-                inputMode="decimal"
-                value={lat}
-                onChange={(e) => setLat(e.target.value)}
-              />
-            </Field>
-            <Field title="Longitude" error={errors.longitude}>
-              <input
-                className={input}
-                inputMode="decimal"
-                value={lng}
-                onChange={(e) => setLng(e.target.value)}
-              />
-            </Field>
-          </div>
-          <button
-            type="submit"
-            className="w-full rounded-full bg-terracotta px-6 py-3 text-base font-semibold text-paper transition-all duration-200 hover:-translate-y-0.5 hover:bg-terracotta-dark hover:shadow-[0_10px_24px_rgba(184,72,31,0.3)] active:translate-y-0"
-          >
-            Save farm profile
-          </button>
-          {saved && (
-            <p className="rounded-2xl border border-olive/30 bg-paper px-4 py-2 text-sm text-olive">
-              Saved in this browser.
-            </p>
-          )}
-        </section>
-      </form>
+      {ready ? (
+        <FarmForm initial={farm} />
+      ) : (
+        <div className="h-96 animate-pulse rounded-[28px] bg-sand" />
+      )}
     </>
   );
 }

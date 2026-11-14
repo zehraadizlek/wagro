@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import PageHeader from "@/components/ui/PageHeader";
 
 const MODULES = [
@@ -16,8 +16,8 @@ const MODULES = [
     href: "/environment",
     n: "02",
     title: "Climate",
-    text: "Temperature and rainfall history from NASA POWER.",
-    tag: "NASA POWER",
+    text: "Temperature and rainfall history for your farm location.",
+    tag: "Satellite data",
     card: "bg-sage text-espresso",
     tagStyle: "bg-espresso text-paper",
     tall: false,
@@ -65,7 +65,7 @@ export default function Page() {
             <em className="text-terracotta">next?</em>
           </>
         }
-        description="Compare crop rotation strategies using NASA climate data, your soil, and transparent scoring."
+        description="Compare crop rotation strategies using satellite climate data, your soil, and transparent scoring."
       />
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -84,7 +84,7 @@ export default function Page() {
               >
                 {m.tag}
               </span>
-              <span className="text-2xl transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1">
+              <span className="text-2xl transition-transform duration-300 group-hover:-translate-y-1 group-hover:translate-x-1">
                 ↗
               </span>
             </div>
