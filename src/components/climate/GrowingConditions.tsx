@@ -118,9 +118,9 @@ export default function GrowingConditions({ ind }: { ind: AgroIndicators }) {
 
   return (
     <section className="rounded-[28px] border border-line bg-paper p-6">
-      <h2 className="font-display text-3xl">Your growing season at a glance</h2>
+      <h2 className="font-display text-3xl">Your weather</h2>
       <p className="mb-5 text-sm text-muted">
-        Based on the last {Math.round(ind.years)} years of NASA data for your area.
+        Typical year, from {Math.round(ind.years)} years of NASA data.
       </p>
 
       <div className="grid gap-4 md:grid-cols-2">

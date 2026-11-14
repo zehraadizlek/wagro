@@ -74,8 +74,7 @@ export default function SeasonTimeline({
     <section className="break-inside-avoid rounded-[28px] border border-line bg-paper p-6">
       <h2 className="font-display text-3xl">Your field, month by month</h2>
       <p className="mt-1 mb-5 text-sm text-muted">
-        Coloured squares: a crop is growing. Striped squares: the field is
-        empty. Icons show months that are often risky in your area.
+        Each square is a month. Striped means the field is empty.
       </p>
 
       <div className="space-y-6">

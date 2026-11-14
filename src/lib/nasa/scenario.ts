@@ -18,7 +18,7 @@ export type Scenario = {
 export const NO_CHANGE: Scenario = { tempC: 0, rain: 0 };
 
 export const SCENARIO_NOTE =
-  "Scenarios shift every day of the last 10 years by the same amount (the delta method). Humidity, wind, sunshine and soil wetness stay as they were. This tests how sensitive each option is; it is not a forecast.";
+  "Every day of the last 10 years is shifted by the same amount. This is a stress test, not a forecast.";
 
 export type ClimateSummary = {
   meanTemp: number | null;

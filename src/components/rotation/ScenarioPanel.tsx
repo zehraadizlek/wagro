@@ -81,10 +81,9 @@ export default function ScenarioPanel({
     <section className="rounded-[28px] border border-line bg-paper p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-display text-3xl">What if the weather changes?</h2>
+          <h2 className="font-display text-3xl">What if it gets warmer or drier?</h2>
           <p className="mt-1 text-sm text-muted">
-            Move the sliders to see how each option holds up in a warmer or
-            drier future. Everything on this page updates.
+            Move the sliders. Everything above updates.
           </p>
         </div>
         {changed && (

@@ -1,25 +1,19 @@
 import { CROP_PARAMS } from "@/lib/rotation/crops";
 import type { StrategyResult } from "@/lib/rotation/engine";
 
-function Part({ title, items }: { title: string; items: string[] }) {
+function List({ items }: { items: string[] }) {
   return (
-    <div>
-      <h4 className="text-xs font-medium uppercase tracking-[0.12em] text-olive">
-        {title}
-      </h4>
-      <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-muted">
-        {items.map((t, i) => (
-          <li key={i}>{t}</li>
-        ))}
-      </ul>
-    </div>
+    <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm text-muted">
+      {items.map((t, i) => (
+        <li key={i}>{t}</li>
+      ))}
+    </ul>
   );
 }
 
 /**
- * One card per option, answering the five questions the challenge asks:
- * why it was suggested, what evidence supports it, what it may offer,
- * where information is missing, and what needs local review.
+ * One card per option: why, what it may do, what to check locally.
+ * Evidence and knowledge gaps sit behind a toggle.
  */
 export default function StrategyCards({
   results,
@@ -30,16 +24,12 @@ export default function StrategyCards({
 }) {
   return (
     <section>
-      <h2 className="font-display text-3xl">The options, explained</h2>
-      <p className="mt-1 mb-5 text-sm text-muted">
-        For each option: why we suggest it, what it rests on, what it may do
-        for your farm, what we do not know, and what to check locally.
-      </p>
-      <div className="grid gap-4 md:grid-cols-2">
+      <h2 className="font-display text-3xl">Your options</h2>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
         {results.map((r) => (
           <article
             key={r.id}
-            className={`space-y-4 rounded-[24px] border bg-paper p-5 ${
+            className={`space-y-3 rounded-[24px] border bg-paper p-5 ${
               r.id === bestId ? "border-accent" : "border-line"
             }`}
           >
@@ -62,12 +52,26 @@ export default function StrategyCards({
 
             <p className="text-sm">{r.why}</p>
 
-            <Part title="What it may do for you" items={r.benefits} />
-            <Part title="Based on" items={r.evidence} />
-            <Part title="What we don't know" items={r.gaps} />
+            <div>
+              <h4 className="text-sm font-medium text-olive">Good for</h4>
+              <List items={r.benefits} />
+            </div>
+
             {r.localReview.length > 0 && (
-              <Part title="Check locally" items={r.localReview} />
+              <div>
+                <h4 className="text-sm font-medium text-clay">Check locally</h4>
+                <List items={r.localReview} />
+              </div>
             )}
+
+            <details className="text-sm">
+              <summary className="cursor-pointer text-muted">
+                What this is based on
+              </summary>
+              <List items={r.evidence} />
+              <h4 className="mt-2 text-sm font-medium">Not known yet</h4>
+              <List items={r.gaps} />
+            </details>
           </article>
         ))}
       </div>

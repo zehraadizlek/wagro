@@ -40,18 +40,18 @@ export const farmProfileSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, "Farm name is required")
+    .min(1, "Give your field a name")
     .max(80, "Farm name must be 80 characters or fewer"),
   latitude: z
-    .number({ message: "Pick a location on the map" })
+    .number({ message: "Click the map to place your field" })
     .min(-90, "Latitude must be between -90 and 90")
     .max(90, "Latitude must be between -90 and 90"),
   longitude: z
-    .number({ message: "Pick a location on the map" })
+    .number({ message: "Click the map to place your field" })
     .min(-180, "Longitude must be between -180 and 180")
     .max(180, "Longitude must be between -180 and 180"),
   areaHa: z
-    .number({ message: "Enter the farm area" })
+    .number({ message: "Enter the field size" })
     .positive("Area must be greater than 0")
     .max(100000, "Area must be 100000 ha or less"),
   currentCrop: z.enum(CROPS),
