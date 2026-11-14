@@ -1,4 +1,4 @@
-import type { Crop } from "@/lib/schemas/farm";
+import type { Crop, SoilType } from "@/lib/schemas/farm";
 
 /**
  * PROTOTYPE ASSUMPTIONS
@@ -28,6 +28,10 @@ export type CropParams = {
   tempRangeC: [number, number];
   /** Assumed seasonal rainfall range that suits the crop without irrigation, in mm. */
   rainRangeMm: [number, number];
+  /** Assumed comfortable soil pH range. */
+  phRange: [number, number];
+  /** Assumed suitability of each soil texture, 0 to 100. "unknown" is skipped in scoring. */
+  soilTypeFit: Record<Exclude<SoilType, "unknown">, number>;
 };
 
 export const CROP_PARAMS: Record<Crop, CropParams> = {
@@ -40,6 +44,8 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     soilHealth: 2.5,
     tempRangeC: [8, 22],
     rainRangeMm: [300, 600],
+    phRange: [6, 7.5],
+    soilTypeFit: { sandy: 55, loamy: 100, clay: 85, silty: 90 },
   },
   barley: {
     crop: "barley",
@@ -50,6 +56,8 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     soilHealth: 2.5,
     tempRangeC: [7, 20],
     rainRangeMm: [250, 500],
+    phRange: [6, 7.5],
+    soilTypeFit: { sandy: 70, loamy: 100, clay: 75, silty: 90 },
   },
   corn: {
     crop: "corn",
@@ -60,6 +68,8 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     soilHealth: 2,
     tempRangeC: [18, 30],
     rainRangeMm: [500, 800],
+    phRange: [5.8, 7],
+    soilTypeFit: { sandy: 50, loamy: 100, clay: 70, silty: 95 },
   },
   chickpea: {
     crop: "chickpea",
@@ -70,6 +80,8 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     soilHealth: 4,
     tempRangeC: [10, 25],
     rainRangeMm: [250, 450],
+    phRange: [6, 8],
+    soilTypeFit: { sandy: 80, loamy: 90, clay: 60, silty: 85 },
   },
   lentil: {
     crop: "lentil",
@@ -80,6 +92,8 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     soilHealth: 4,
     tempRangeC: [8, 22],
     rainRangeMm: [250, 450],
+    phRange: [6, 8],
+    soilTypeFit: { sandy: 80, loamy: 95, clay: 65, silty: 85 },
   },
   sunflower: {
     crop: "sunflower",
@@ -90,6 +104,8 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     soilHealth: 3,
     tempRangeC: [15, 28],
     rainRangeMm: [400, 650],
+    phRange: [6, 7.5],
+    soilTypeFit: { sandy: 70, loamy: 100, clay: 80, silty: 90 },
   },
 };
 

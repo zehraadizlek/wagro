@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -16,6 +16,7 @@ import {
 import PageHeader from "@/components/ui/PageHeader";
 import type { DailyPoint, PowerSummary } from "@/lib/nasa/power";
 import { rangeFor } from "@/lib/nasa/range";
+import { computeTrend } from "@/lib/nasa/trend";
 import { useFarm } from "@/lib/storage/use-farm";
 
 type ApiData = {
@@ -33,6 +34,7 @@ const RANGES = [
   { years: 1, label: "Last 1 year" },
   { years: 2, label: "Last 2 years" },
   { years: 3, label: "Last 3 years" },
+  { years: 10, label: "Last 10 years (trend)" },
 ];
 
 const fmt = (v: number | null, digits = 1) =>
@@ -107,6 +109,11 @@ export default function Page() {
         ? "error"
         : "done";
   const data = current?.data ?? null;
+
+  const trend = useMemo(
+    () => (data && data.points.length >= 365 * 8 ? computeTrend(data.points) : null),
+    [data],
+  );
 
   const tick = { fontSize: 12, fill: "#7a6352" };
 
@@ -260,6 +267,65 @@ export default function Page() {
                   </ResponsiveContainer>
                 </div>
               </section>
+
+              {trend && (
+                <section className="rounded-[28px] border border-line bg-paper p-6">
+                  <h2 className="font-display text-3xl">
+                    How your climate has shifted
+                  </h2>
+                  <p className="mb-4 text-sm text-muted">
+                    Each bar or point is one 12-month period, counted back from
+                    the latest available day.
+                  </p>
+                  <div className="mb-5 grid gap-3 md:grid-cols-2">
+                    <div className="rounded-2xl bg-terracotta p-4 text-sm text-paper">
+                      {trend.tempText}
+                    </div>
+                    <div className="rounded-2xl bg-sage p-4 text-sm">
+                      {trend.precipText}
+                    </div>
+                  </div>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={trend.buckets}>
+                          <CartesianGrid stroke="#e6d8c3" vertical={false} />
+                          <XAxis dataKey="label" tick={tick} />
+                          <YAxis tick={tick} unit="°" width={40} domain={["auto", "auto"]} />
+                          <Tooltip />
+                          <Line
+                            dataKey="meanTemp"
+                            name="Mean temperature (°C)"
+                            stroke="#b8481f"
+                            strokeWidth={2}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={trend.buckets}>
+                          <CartesianGrid stroke="#e6d8c3" vertical={false} />
+                          <XAxis dataKey="label" tick={tick} />
+                          <YAxis tick={tick} width={44} />
+                          <Tooltip />
+                          <Bar
+                            dataKey="precipMm"
+                            name="Precipitation (mm per year)"
+                            fill="#55612f"
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-xs text-muted">
+                    This is a straight-line fit through about 10 yearly values.
+                    It describes this location and period only. Natural
+                    year-to-year swings are large, so treat it as an indication,
+                    not proof of long-term climate change.
+                  </p>
+                </section>
+              )}
 
               <section className="rounded-[28px] border border-line bg-sand/60 p-6 text-sm text-muted">
                 <h3 className="mb-2 font-medium text-espresso">

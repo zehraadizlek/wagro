@@ -57,9 +57,9 @@ export async function GET(request: Request) {
 
   const { lat, lng, start, end } = parsed.data;
   const days = (toDate(end).getTime() - toDate(start).getTime()) / 86400000;
-  if (days < 0 || days > 366 * 5) {
+  if (days < 0 || days > 366 * 10) {
     return NextResponse.json(
-      { error: "Date range must be between 1 day and 5 years." },
+      { error: "Date range must be between 1 day and 10 years." },
       { status: 400 },
     );
   }

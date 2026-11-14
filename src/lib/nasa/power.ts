@@ -67,7 +67,7 @@ export async function fetchPower(args: {
 
   const res = await fetch(url, {
     cache: "no-store",
-    signal: AbortSignal.timeout(25000),
+    signal: AbortSignal.timeout(45000),
   });
   if (!res.ok) {
     throw new Error(`NASA POWER responded with status ${res.status}`);

@@ -13,10 +13,12 @@ import {
   YAxis,
 } from "recharts";
 import PageHeader from "@/components/ui/PageHeader";
+import RecommendationCard from "@/components/rotation/RecommendationCard";
 import { useClimate } from "@/lib/nasa/use-climate";
 import { CROP_PARAMS, PARAMETERS_NOTE } from "@/lib/rotation/crops";
 import {
   ENGINE_NOTE,
+  buildRecommendation,
   evaluateStrategies,
   type StrategyResult,
 } from "@/lib/rotation/engine";
@@ -143,6 +145,11 @@ export default function Page() {
     return evaluateStrategies(farm, climate.summary);
   }, [farm, climate.status, climate.summary]);
 
+  const rec = useMemo(
+    () => (farm && results ? buildRecommendation(farm, results) : null),
+    [farm, results],
+  );
+
   const bestId = results
     ? [...results].sort((a, b) => b.overall - a.overall)[0].id
     : null;
@@ -165,7 +172,7 @@ export default function Page() {
             Compare your <em className="text-terracotta">rotations</em>
           </>
         }
-        description="Three three-season strategies scored on water, nitrogen, soil health, diversity and climate fit."
+        description="Three three-season strategies scored on water, nitrogen, soil health, diversity, climate and soil fit. Start with the summary, then open the details."
       />
 
       {ready && !farm && (
@@ -201,6 +208,9 @@ export default function Page() {
             </div>
           )}
 
+          {rec && <RecommendationCard rec={rec} results={results} />}
+
+          <h2 className="pt-4 font-display text-3xl">Detailed breakdown</h2>
           {results.map((s, i) => (
             <StrategyCard key={s.id} s={s} best={s.id === bestId} index={i} />
           ))}

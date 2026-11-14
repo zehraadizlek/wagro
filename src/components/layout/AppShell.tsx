@@ -17,7 +17,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-30 px-4 pt-4">
+      <header className="sticky top-0 z-30 px-4 pt-4 print:hidden">
         <div className="mx-auto flex max-w-6xl items-center gap-2 rounded-full border border-line bg-paper p-1.5 shadow-[0_6px_24px_rgba(43,29,20,0.08)]">
           <Link
             href="/"
@@ -50,7 +50,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-5 pb-24 pt-14">{children}</main>
+      <main className="mx-auto max-w-6xl px-5 pb-24 pt-14 print:pt-0 print:pb-0">{children}</main>
 
       <footer className="mx-auto max-w-6xl border-t border-line px-5 py-6 text-xs text-muted">
         Wagro is a prototype built for NASA Space Apps Challenge 2026. It does

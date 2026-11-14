@@ -6,6 +6,8 @@ import {
 } from "@/lib/schemas/farm";
 import { CROP_PARAMS, type CropFamily } from "./crops";
 
+const SOIL_INPUT_NOTE = "Soil fit uses only the soil type and pH you entered.";
+
 export const ENGINE_NOTE =
   "Scores come from transparent rules and relative crop parameters. This is not a trained machine-learning model, and the parameters are prototype assumptions that need agronomic validation.";
 
@@ -14,7 +16,8 @@ export type CriterionId =
   | "nitrogen"
   | "soilHealth"
   | "diversity"
-  | "climate";
+  | "climate"
+  | "soilFit";
 
 export type ClimateInput = {
   meanTemp: number | null;
@@ -52,14 +55,26 @@ const LABELS: Record<CriterionId, string> = {
   soilHealth: "Soil health",
   diversity: "Diversity",
   climate: "Climate suitability",
+  soilFit: "Soil fit",
+};
+
+/** Plain-language meaning of each criterion, shown to readers. */
+export const CRITERION_MEANING: Record<CriterionId, string> = {
+  water: "how much water the crops need overall",
+  nitrogen: "how much nitrogen the soil gains or loses across the sequence",
+  soilHealth: "how well the sequence protects and builds the soil",
+  diversity: "how varied the crops and crop families are",
+  climate: "how well the crops match your local temperature and rainfall",
+  soilFit: "how well the crops suit your soil type and pH",
 };
 
 const BASE_WEIGHTS: Record<CriterionId, number> = {
-  water: 0.25,
-  nitrogen: 0.2,
-  soilHealth: 0.2,
-  diversity: 0.15,
+  water: 0.22,
+  nitrogen: 0.18,
+  soilHealth: 0.18,
+  diversity: 0.12,
   climate: 0.2,
+  soilFit: 0.1,
 };
 
 const PRIORITY_TARGET: Record<Priority, CriterionId> = {
@@ -264,10 +279,52 @@ function climateScore(
   };
 }
 
-function weights(priorities: Priority[], hasClimate: boolean) {
+export function cropSoilFit(
+  crop: Crop,
+  soilType: FarmProfile["soilType"],
+  soilPh: number | null,
+): number | null {
+  const p = CROP_PARAMS[crop];
+  const parts: number[] = [];
+  if (soilPh !== null) {
+    const [lo, hi] = p.phRange;
+    const dist = soilPh < lo ? lo - soilPh : soilPh > hi ? soilPh - hi : 0;
+    parts.push(clamp(100 - 30 * dist));
+  }
+  if (soilType !== "unknown") parts.push(p.soilTypeFit[soilType]);
+  return parts.length ? avg(parts) : null;
+}
+
+function soilFitScore(seq: Crop[], farm: FarmProfile) {
+  const fits = seq
+    .map((c) => cropSoilFit(c, farm.soilType, farm.soilPh))
+    .filter((v): v is number => v !== null);
+  if (!fits.length)
+    return {
+      score: null as number | null,
+      expl: "You did not enter a soil type or pH, so this criterion is left out and the other weights are rescaled.",
+    };
+  const used = [
+    farm.soilType !== "unknown" ? `${farm.soilType} soil` : null,
+    farm.soilPh !== null ? `pH ${farm.soilPh}` : null,
+  ]
+    .filter(Boolean)
+    .join(" and ");
+  return {
+    score: avg(fits),
+    expl: `Compares ${used} with assumed crop preferences. ${SOIL_INPUT_NOTE}`,
+  };
+}
+
+function weights(
+  priorities: Priority[],
+  hasClimate: boolean,
+  hasSoil: boolean,
+) {
   const w = { ...BASE_WEIGHTS };
   for (const p of priorities) w[PRIORITY_TARGET[p]] += 0.1;
   if (!hasClimate) w.climate = 0;
+  if (!hasSoil) w.soilFit = 0;
   const total = Object.values(w).reduce((a, b) => a + b, 0);
   (Object.keys(w) as CriterionId[]).forEach((k) => (w[k] = w[k] / total));
   return w;
@@ -300,7 +357,8 @@ export function evaluateStrategies(
   const hasClimate =
     !!climate &&
     (climate.meanTemp !== null || climate.annualPrecipMm !== null);
-  const w = weights(farm.priorities, hasClimate);
+  const hasSoil = farm.soilType !== "unknown" || farm.soilPh !== null;
+  const w = weights(farm.priorities, hasClimate, hasSoil);
   const seqs = buildSequences(farm, hasClimate ? climate : null);
 
   return (["current", "legume", "diversified"] as StrategyId[]).map((id) => {
@@ -311,6 +369,7 @@ export function evaluateStrategies(
       soilHealth: soilScore(seq),
       diversity: diversityScore(seq),
       climate: climateScore(seq, hasClimate ? climate : null, farm.irrigation),
+      soilFit: soilFitScore(seq, farm),
     };
 
     const criteria: CriterionResult[] = (Object.keys(parts) as CriterionId[]).map(
@@ -345,7 +404,9 @@ export function evaluateStrategies(
 
     const reasons = [
       "Crop parameters are prototype assumptions and have not been validated by an agronomist.",
-      "Soil type and pH are not used in the scoring in this version.",
+      hasSoil
+        ? "Soil fit relies on the soil type and pH you entered, not on a soil test or satellite soil data."
+        : "No soil type or pH was entered, so soil fit is not part of the score.",
     ];
     if (hasClimate)
       reasons.push(
@@ -366,4 +427,104 @@ export function evaluateStrategies(
       confidence: { level: hasClimate ? "medium" : "low", reasons },
     };
   });
+}
+
+// ---------- plain-language recommendation ----------
+
+export type Recommendation = {
+  bestId: StrategyId;
+  headline: string;
+  /** Why the top option leads, in everyday words. */
+  reasons: string[];
+  /** Where the top option is weaker than the current pattern. */
+  tradeoffs: string[];
+  /** Things to keep in mind before relying on the result. */
+  cautions: string[];
+  /** Questions worth taking to a local agronomist. */
+  discuss: string[];
+};
+
+const seqText = (r: StrategyResult) =>
+  r.sequence.map((c) => CROP_PARAMS[c].label).join(", then ");
+
+export function buildRecommendation(
+  farm: FarmProfile,
+  results: StrategyResult[],
+): Recommendation {
+  const ranked = [...results].sort((a, b) => b.overall - a.overall);
+  const best = ranked[0];
+  const second = ranked[1];
+  const current = results.find((r) => r.id === "current")!;
+
+  const headline =
+    best.id === "current"
+      ? `Your current pattern (${seqText(current)}) scores highest under these rules, with ${best.overall} out of 100.`
+      : `${best.name} scores highest under these rules: ${seqText(best)}. It gets ${best.overall} out of 100, compared with ${current.overall} for your current pattern.`;
+
+  const diffs = best.criteria
+    .map((c, i) => ({
+      c,
+      before: current.criteria[i].score,
+      delta:
+        c.score !== null && current.criteria[i].score !== null
+          ? c.score - current.criteria[i].score!
+          : null,
+    }))
+    .filter((d) => d.delta !== null);
+
+  const reasons =
+    best.id === "current"
+      ? [
+          "None of the alternatives improved the overall result enough to beat your current pattern.",
+          ...best.advantages.slice(0, 2),
+        ]
+      : diffs
+          .filter((d) => d.delta! >= 5)
+          .sort((a, b) => b.delta! - a.delta!)
+          .slice(0, 3)
+          .map(
+            (d) =>
+              `${d.c.label} improves from ${d.before} to ${d.c.score} out of 100. This measures ${CRITERION_MEANING[d.c.id]}.`,
+          );
+  if (!reasons.length)
+    reasons.push(
+      "The difference comes from many small gains rather than one clear advantage.",
+    );
+
+  const tradeoffs =
+    best.id === "current"
+      ? []
+      : diffs
+          .filter((d) => d.delta! <= -5)
+          .sort((a, b) => a.delta! - b.delta!)
+          .slice(0, 2)
+          .map(
+            (d) =>
+              `${d.c.label} is lower than your current pattern (${d.c.score} compared with ${d.before}).`,
+          );
+
+  const cautions: string[] = [];
+  if (second && best.overall - second.overall < 5)
+    cautions.push(
+      `${second.name} is very close (${second.overall}). Treat the top two as similar and decide with other factors, such as markets and equipment.`,
+    );
+  if (best.confidence.level === "low")
+    cautions.push(
+      "Climate data was missing, so this result is less reliable.",
+    );
+  cautions.push(
+    "Crop values are prototype assumptions. A higher score means a better fit under these rules, not a guaranteed higher yield or profit.",
+  );
+  if (farm.priorities.length === 0)
+    cautions.push(
+      "You did not choose any priorities, so all criteria use their default weights.",
+    );
+
+  const discuss = [
+    "Do the crop values for water, nitrogen and soil health match your region?",
+    "Are the suggested crops realistic for your planting seasons, markets and machinery?",
+    "Does a soil test agree with the soil type and pH you entered?",
+  ];
+
+  return { bestId: best.id, headline, reasons, tradeoffs, cautions, discuss };
 }
