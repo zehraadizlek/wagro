@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, DM_Sans } from "next/font/google";
+import { Lora, DM_Sans } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
 
-const display = Instrument_Serif({
+const display = Lora({
   subsets: ["latin", "latin-ext"],
-  weight: "400",
   style: ["normal", "italic"],
-  variable: "--font-instrument",
+  variable: "--font-lora",
 });
 const body = DM_Sans({
   subsets: ["latin", "latin-ext"],

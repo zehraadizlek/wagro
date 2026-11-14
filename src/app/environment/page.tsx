@@ -35,10 +35,10 @@ type ApiData = {
 type Result = { key: string; data?: ApiData; error?: string };
 
 const RANGES = [
-  { years: 1, label: "Last 1 year" },
-  { years: 2, label: "Last 2 years" },
-  { years: 3, label: "Last 3 years" },
-  { years: 10, label: "Last 10 years (trend)" },
+  { years: 1, label: "1 year" },
+  { years: 2, label: "2 years" },
+  { years: 3, label: "3 years" },
+  { years: 10, label: "10 years" },
 ];
 
 const fmt = (v: number | null, digits = 1) =>
@@ -60,7 +60,7 @@ function Stat({
       <div className="text-xs font-medium uppercase tracking-[0.14em] opacity-70">
         {title}
       </div>
-      <div className="mt-2 font-display text-5xl leading-none">
+      <div className="mt-2 font-display text-4xl leading-none">
         {value}
         <span className="ml-1 text-lg opacity-70">{unit}</span>
       </div>
@@ -130,7 +130,7 @@ export default function Page() {
   // Number of years the loaded data spans, used to show per-year values.
   const yearsCovered = data ? Math.max(1, data.summary.days / 365.25) : 1;
 
-  const tick = { fontSize: 12, fill: "#7a6352" };
+  const tick = { fontSize: 12, fill: "#6b665c" };
 
   return (
     <>
@@ -138,7 +138,7 @@ export default function Page() {
         eyebrow="NASA POWER"
         title={
           <>
-            Your <em className="text-terracotta">climate</em>
+            Your <em className="text-accent">climate</em>
           </>
         }
         description="Temperature, rain, evaporation, frost, heat and soil wetness for your farm location, from NASA POWER."
@@ -151,7 +151,7 @@ export default function Page() {
           </p>
           <Link
             href="/farm"
-            className="mt-5 inline-block rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-paper hover:bg-terracotta-dark"
+            className="btn btn-primary mt-5"
           >
             Go to Farm profile
           </Link>
@@ -160,19 +160,18 @@ export default function Page() {
 
       {farm && (
         <>
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="mr-2 text-sm text-muted">
-              {farm.name} at {farm.latitude.toFixed(3)},{" "}
-              {farm.longitude.toFixed(3)}
-            </span>
+          <p className="mb-3 text-sm text-muted">
+            {farm.name} · {farm.latitude.toFixed(3)}, {farm.longitude.toFixed(3)}
+          </p>
+          <div className="mb-8 grid max-w-xl grid-cols-4 gap-1 rounded-full border border-line bg-paper p-1">
             {RANGES.map((r) => (
               <button
                 key={r.years}
                 onClick={() => setYears(r.years)}
-                className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
+                className={`h-10 rounded-full text-sm transition-colors ${
                   years === r.years
-                    ? "border-espresso bg-espresso text-paper"
-                    : "border-line bg-paper text-muted hover:border-espresso hover:text-espresso"
+                    ? "bg-sage font-medium text-espresso"
+                    : "text-muted hover:text-espresso"
                 }`}
               >
                 {r.label}
@@ -188,14 +187,14 @@ export default function Page() {
           )}
 
           {status === "error" && (
-            <div className="rounded-[24px] border border-terracotta/40 bg-paper p-6">
-              <p className="font-medium text-terracotta">
+            <div className="rounded-[24px] border border-clay/40 bg-paper p-6">
+              <p className="font-medium text-clay">
                 Could not load NASA POWER data
               </p>
               <p className="mt-1 text-sm text-muted">{current?.error}</p>
               <button
                 onClick={() => setAttempt((a) => a + 1)}
-                className="mt-4 rounded-full border border-espresso px-4 py-1.5 text-sm hover:bg-espresso hover:text-paper"
+                className="btn btn-ghost mt-4"
               >
                 Try again
               </button>
@@ -209,13 +208,13 @@ export default function Page() {
                   title="Mean temperature"
                   value={fmt(data.summary.meanTemp)}
                   unit="°C"
-                  tone="bg-terracotta text-paper"
+                  tone="border border-line bg-paper"
                 />
                 <Stat
-                  title="Daily mean range"
+                  title="Coldest to warmest day"
                   value={`${fmt(data.summary.minTemp, 0)} to ${fmt(data.summary.maxTemp, 0)}`}
                   unit="°C"
-                  tone="bg-sand"
+                  tone="border border-line bg-paper"
                 />
                 <Stat
                   title={years > 1 ? "Precipitation per year" : "Total precipitation"}
@@ -226,13 +225,13 @@ export default function Page() {
                     0,
                   )}
                   unit="mm"
-                  tone="bg-sage"
+                  tone="border border-line bg-paper"
                 />
                 <Stat
-                  title={years > 1 ? "Days with 1 mm or more, per year" : "Days with 1 mm or more"}
+                  title={years > 1 ? "Rainy days per year" : "Rainy days"}
                   value={String(Math.round(data.summary.rainyDays / yearsCovered))}
                   unit="days"
-                  tone="bg-espresso text-paper"
+                  tone="border border-line bg-paper"
                 />
               </div>
 
@@ -248,7 +247,7 @@ export default function Page() {
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data.points}>
-                      <CartesianGrid stroke="#e6d8c3" vertical={false} />
+                      <CartesianGrid stroke="#e4ded2" vertical={false} />
                       <XAxis dataKey="date" tick={tick} minTickGap={48} />
                       <YAxis tick={tick} unit="°" width={40} />
                       <Tooltip />
@@ -256,7 +255,7 @@ export default function Page() {
                         type="monotone"
                         dataKey="t2m"
                         name="Temperature (°C)"
-                        stroke="#b8481f"
+                        stroke="#8b7355"
                         strokeWidth={2}
                         dot={false}
                         connectNulls={false}
@@ -276,14 +275,14 @@ export default function Page() {
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data.points}>
-                      <CartesianGrid stroke="#e6d8c3" vertical={false} />
+                      <CartesianGrid stroke="#e4ded2" vertical={false} />
                       <XAxis dataKey="date" tick={tick} minTickGap={48} />
                       <YAxis tick={tick} width={40} />
                       <Tooltip />
                       <Bar
                         dataKey="precip"
                         name="Precipitation (mm)"
-                        fill="#55612f"
+                        fill="#7d8f69"
                       />
                     </BarChart>
                   </ResponsiveContainer>
@@ -300,7 +299,7 @@ export default function Page() {
                     the latest available day.
                   </p>
                   <div className="mb-5 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-2xl bg-terracotta p-4 text-sm text-paper">
+                    <div className="rounded-2xl bg-sand p-4 text-sm">
                       {trend.tempText}
                     </div>
                     <div className="rounded-2xl bg-sage p-4 text-sm">
@@ -311,14 +310,14 @@ export default function Page() {
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={trend.buckets}>
-                          <CartesianGrid stroke="#e6d8c3" vertical={false} />
+                          <CartesianGrid stroke="#e4ded2" vertical={false} />
                           <XAxis dataKey="label" tick={tick} />
                           <YAxis tick={tick} unit="°" width={40} domain={["auto", "auto"]} />
                           <Tooltip />
                           <Line
                             dataKey="meanTemp"
                             name="Mean temperature (°C)"
-                            stroke="#b8481f"
+                            stroke="#8b7355"
                             strokeWidth={2}
                           />
                         </LineChart>
@@ -327,14 +326,14 @@ export default function Page() {
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={trend.buckets}>
-                          <CartesianGrid stroke="#e6d8c3" vertical={false} />
+                          <CartesianGrid stroke="#e4ded2" vertical={false} />
                           <XAxis dataKey="label" tick={tick} />
                           <YAxis tick={tick} width={44} />
                           <Tooltip />
                           <Bar
                             dataKey="precipMm"
                             name="Precipitation (mm per year)"
-                            fill="#55612f"
+                            fill="#7d8f69"
                           />
                         </BarChart>
                       </ResponsiveContainer>

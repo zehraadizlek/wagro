@@ -16,13 +16,14 @@ import { doyLabel } from "@/lib/nasa/indicators";
 import { useClimate } from "@/lib/nasa/use-climate";
 import { CROP_PARAMS, PARAMETERS_NOTE } from "@/lib/rotation/crops";
 import {
+  CRITERION_MEANING,
   ENGINE_NOTE,
   buildRecommendation,
   evaluateStrategies,
 } from "@/lib/rotation/engine";
 import { useFarm } from "@/lib/storage/use-farm";
 
-const COLORS = ["#b8481f", "#55612f", "#2b1d14"];
+const COLORS = ["#8b7355", "#7d8f69", "#3f4a3a"];
 const label = (s: string) =>
   s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, " ");
 
@@ -71,7 +72,7 @@ export default function Page() {
         <p className="text-lg">Save your farm profile to create a report.</p>
         <Link
           href="/farm"
-          className="mt-5 inline-block rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-paper hover:bg-terracotta-dark"
+          className="btn btn-primary mt-5"
         >
           Go to Farm profile
         </Link>
@@ -98,7 +99,7 @@ export default function Page() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="text-xs font-medium uppercase tracking-[0.16em] text-terracotta">
+          <div className="text-xs font-medium uppercase tracking-[0.16em] text-accent">
             Decision report
           </div>
           <h1 className="font-display text-5xl leading-none">{farm.name}</h1>
@@ -109,7 +110,7 @@ export default function Page() {
         </div>
         <button
           onClick={() => window.print()}
-          className="rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-paper hover:bg-terracotta-dark print:hidden"
+          className="btn btn-primary print:hidden"
         >
           Print or save as PDF
         </button>
@@ -192,52 +193,79 @@ export default function Page() {
         </p>
       </Section>
 
-      <Section title="4. Strategy comparison">
+      <Section title="4. Comparing the options">
         <div className="overflow-x-auto">
           <BarChart width={760} height={300} data={chartData}>
-            <CartesianGrid stroke="#e6d8c3" vertical={false} />
-            <XAxis dataKey="criterion" tick={{ fontSize: 12, fill: "#7a6352" }} />
-            <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: "#7a6352" }} width={36} />
+            <CartesianGrid stroke="#e4ded2" vertical={false} />
+            <XAxis dataKey="criterion" tick={{ fontSize: 12, fill: "#6b665c" }} />
+            <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: "#6b665c" }} width={36} />
             <Legend />
             {results.map((r, i) => (
               <Bar key={r.id} dataKey={r.name} fill={COLORS[i]} isAnimationActive={false} />
             ))}
           </BarChart>
         </div>
-        <div className="mt-5 space-y-6">
-          {results.map((r) => (
-            <div key={r.id} className="break-inside-avoid">
-              <div className="flex items-baseline justify-between">
-                <h3 className="font-display text-2xl">{r.name}</h3>
-                <span className="font-display text-3xl text-terracotta">{r.overall}</span>
-              </div>
-              <p className="text-sm text-muted">
-                {r.sequence.map((c) => CROP_PARAMS[c].label).join(" → ")}
-              </p>
-              <table className="mt-2 w-full text-sm">
-                <tbody>
+        <table className="mt-5 w-full text-sm">
+          <thead>
+            <tr className="border-b border-line text-left">
+              <th className="py-2 pr-3 font-medium text-muted">What it measures</th>
+              {results.map((r) => (
+                <th key={r.id} className="py-2 pr-3 text-right font-medium">
+                  {r.name}
+                  <div className="text-xs font-normal text-muted">
+                    {r.sequence.map((c) => CROP_PARAMS[c].label).join(" → ")}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {results[0].criteria.map((c, i) => (
+              <tr key={c.id} className="border-b border-line/60">
+                <td className="py-2 pr-3">
+                  <span className="font-medium">{c.label}</span>
+                  <div className="text-xs text-muted">{CRITERION_MEANING[c.id]}</div>
+                </td>
+                {results.map((r) => (
+                  <td key={r.id} className="py-2 pr-3 text-right tabular-nums">
+                    {r.criteria[i].score ?? "n/a"}
+                  </td>
+                ))}
+              </tr>
+            ))}
+            <tr>
+              <td className="py-2 pr-3 font-medium">Overall</td>
+              {results.map((r) => (
+                <td key={r.id} className="py-2 pr-3 text-right font-display text-2xl tabular-nums">
+                  {r.overall}
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+        <p className="mt-2 text-xs text-muted">
+          Scores run from 0 to 100. Higher is better for the farm under these
+          rules.
+        </p>
+        <details className="mt-4 text-sm">
+          <summary className="cursor-pointer font-medium">
+            How each score was calculated
+          </summary>
+          <div className="mt-3 space-y-4">
+            {results.map((r) => (
+              <div key={r.id}>
+                <h3 className="font-medium">{r.name}</h3>
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted">
                   {r.criteria.map((c) => (
-                    <tr key={c.id} className="border-b border-line/60 align-top">
-                      <td className="py-1.5 pr-3 font-medium">{c.label}</td>
-                      <td className="py-1.5 pr-3">{c.score === null ? "n/a" : c.score}</td>
-                      <td className="py-1.5 text-xs text-muted">{c.explanation}</td>
-                    </tr>
+                    <li key={c.id}>
+                      <span className="text-espresso">{c.label}:</span> {c.explanation}
+                    </li>
                   ))}
-                </tbody>
-              </table>
-              <div className="mt-2 grid gap-3 text-xs text-muted md:grid-cols-2">
-                <div>
-                  <div className="font-medium text-espresso">Advantages</div>
-                  {r.advantages.length ? r.advantages.map((a, i) => <p key={i}>{a}</p>) : <p>None above 60.</p>}
-                </div>
-                <div>
-                  <div className="font-medium text-espresso">Risks</div>
-                  {r.risks.length ? r.risks.map((a, i) => <p key={i}>{a}</p>) : <p>None below 60.</p>}
-                </div>
+                </ul>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </details>
         <div className="mt-6">
           <SeasonTimeline results={results} indicators={ind} farm={farm} />
         </div>

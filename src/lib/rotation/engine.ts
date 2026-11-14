@@ -334,17 +334,17 @@ function weights(
 
 const META: Record<StrategyId, { name: string; description: string }> = {
   current: {
-    name: "Current pattern",
+    name: "Your current rotation",
     description:
       "Continues with your current crop and recent history, so you can compare other options against it.",
   },
   legume: {
-    name: "Legume-supported",
+    name: "Add a legume",
     description:
       "Places a legume between other crops, chosen by climate fit, to support the nitrogen balance.",
   },
   diversified: {
-    name: "Diversified",
+    name: "Mix crop types",
     description:
       "Uses one crop from each family (cereal, legume, oilseed) for the widest variety.",
   },
@@ -431,6 +431,8 @@ export function evaluateStrategies(
 
 // ---------- plain-language recommendation ----------
 
+// ---------- plain-language recommendation ----------
+
 export type Recommendation = {
   bestId: StrategyId;
   headline: string;
@@ -444,8 +446,28 @@ export type Recommendation = {
   discuss: string[];
 };
 
+/** What a better score means, in a farmer's words. */
+const PLAIN_GAIN: Record<CriterionId, string> = {
+  water: "Uses less water",
+  nitrogen: "Leaves more nitrogen in the soil, so less fertilizer",
+  soilHealth: "Better for the soil",
+  diversity: "More crop variety, which breaks pest and disease cycles",
+  climate: "Fits your weather better",
+  soilFit: "Suits your soil better",
+};
+
+/** What a worse score means, in a farmer's words. */
+const PLAIN_LOSS: Record<CriterionId, string> = {
+  water: "Needs more water",
+  nitrogen: "Takes more nitrogen from the soil, so more fertilizer",
+  soilHealth: "Less good for the soil",
+  diversity: "Less crop variety",
+  climate: "Fits your weather less well",
+  soilFit: "Suits your soil less well",
+};
+
 const seqText = (r: StrategyResult) =>
-  r.sequence.map((c) => CROP_PARAMS[c].label).join(", then ");
+  r.sequence.map((c) => CROP_PARAMS[c].label).join(" → ");
 
 export function buildRecommendation(
   farm: FarmProfile,
@@ -458,8 +480,8 @@ export function buildRecommendation(
 
   const headline =
     best.id === "current"
-      ? `Your current pattern (${seqText(current)}) scores highest under these rules, with ${best.overall} out of 100.`
-      : `${best.name} scores highest under these rules: ${seqText(best)}. It gets ${best.overall} out of 100, compared with ${current.overall} for your current pattern.`;
+      ? "Your current rotation is already the best fit."
+      : `Try ${seqText(best)}.`;
 
   const diffs = best.criteria
     .map((c, i) => ({
@@ -474,22 +496,14 @@ export function buildRecommendation(
 
   const reasons =
     best.id === "current"
-      ? [
-          "None of the alternatives improved the overall result enough to beat your current pattern.",
-          ...best.advantages.slice(0, 2),
-        ]
+      ? ["None of the other options did better overall."]
       : diffs
           .filter((d) => d.delta! >= 5)
           .sort((a, b) => b.delta! - a.delta!)
           .slice(0, 3)
-          .map(
-            (d) =>
-              `${d.c.label} improves from ${d.before} to ${d.c.score} out of 100. This measures ${CRITERION_MEANING[d.c.id]}.`,
-          );
+          .map((d) => `${PLAIN_GAIN[d.c.id]} (${d.before} → ${d.c.score}).`);
   if (!reasons.length)
-    reasons.push(
-      "The difference comes from many small gains rather than one clear advantage.",
-    );
+    reasons.push("Many small gains, no single big one.");
 
   const tradeoffs =
     best.id === "current"
@@ -498,32 +512,27 @@ export function buildRecommendation(
           .filter((d) => d.delta! <= -5)
           .sort((a, b) => a.delta! - b.delta!)
           .slice(0, 2)
-          .map(
-            (d) =>
-              `${d.c.label} is lower than your current pattern (${d.c.score} compared with ${d.before}).`,
-          );
+          .map((d) => `${PLAIN_LOSS[d.c.id]} (${d.before} → ${d.c.score}).`);
 
   const cautions: string[] = [];
   if (second && best.overall - second.overall < 5)
     cautions.push(
-      `${second.name} is very close (${second.overall}). Treat the top two as similar and decide with other factors, such as markets and equipment.`,
+      `${second.name} is almost as good (${second.overall}). Choose between them by price, market and machinery.`,
     );
   if (best.confidence.level === "low")
-    cautions.push(
-      "Climate data was missing, so this result is less reliable.",
-    );
+    cautions.push("Weather data was missing, so treat this result with extra care.");
   cautions.push(
-    "Crop values are prototype assumptions. A higher score means a better fit under these rules, not a guaranteed higher yield or profit.",
+    "These are first estimates. A higher score is not a promise of more yield or profit.",
   );
   if (farm.priorities.length === 0)
     cautions.push(
-      "You did not choose any priorities, so all criteria use their default weights.",
+      "You did not pick what matters most to you, so everything counts the same. You can set this in your farm profile.",
     );
 
   const discuss = [
-    "Do the crop values for water, nitrogen and soil health match your region?",
-    "Are the suggested crops realistic for your planting seasons, markets and machinery?",
-    "Does a soil test agree with the soil type and pH you entered?",
+    "Do these water, nitrogen and soil values match what you see in your fields?",
+    "Can you sell these crops, and do you have the machines and time to sow them?",
+    "Does a soil test confirm your soil type and pH?",
   ];
 
   return { bestId: best.id, headline, reasons, tradeoffs, cautions, discuss };

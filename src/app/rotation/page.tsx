@@ -16,16 +16,15 @@ import PageHeader from "@/components/ui/PageHeader";
 import RecommendationCard from "@/components/rotation/RecommendationCard";
 import SeasonTimeline from "@/components/rotation/SeasonTimeline";
 import { useClimate } from "@/lib/nasa/use-climate";
-import { CROP_PARAMS, PARAMETERS_NOTE } from "@/lib/rotation/crops";
+import { CROP_PARAMS } from "@/lib/rotation/crops";
 import {
-  ENGINE_NOTE,
   buildRecommendation,
   evaluateStrategies,
   type StrategyResult,
 } from "@/lib/rotation/engine";
 import { useFarm } from "@/lib/storage/use-farm";
 
-const COLORS = ["#b8481f", "#55612f", "#2b1d14"];
+const COLORS = ["#8b7355", "#7d8f69", "#3f4a3a"];
 
 function StrategyCard({
   s,
@@ -39,14 +38,13 @@ function StrategyCard({
   return (
     <article
       style={{ animationDelay: `${index * 80}ms` }}
-      className={`rise rounded-[28px] border p-6 ${
-        best ? "border-terracotta bg-paper" : "border-line bg-paper"
-      }`}
+      className={`rise rounded-[28px] border p-6 ${best ? "border-accent bg-paper" : "border-line bg-paper"
+        }`}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
           {best && (
-            <span className="mb-2 inline-block rounded-full bg-terracotta px-3 py-1 text-xs font-medium text-paper">
+            <span className="mb-2 inline-block rounded-full bg-accent px-3 py-1 text-xs font-medium text-paper">
               Highest score under these rules
             </span>
           )}
@@ -54,7 +52,7 @@ function StrategyCard({
           <p className="mt-1 text-sm text-muted">{s.description}</p>
         </div>
         <div className="text-right">
-          <div className="font-display text-6xl leading-none text-terracotta">
+          <div className="font-display text-6xl leading-none text-accent">
             {s.overall}
           </div>
           <div className="text-xs text-muted">out of 100</div>
@@ -86,7 +84,7 @@ function StrategyCard({
             </div>
             <div className="mt-1 h-2 rounded-full bg-sand">
               <div
-                className="h-2 rounded-full bg-terracotta"
+                className="h-2 rounded-full bg-accent"
                 style={{ width: `${c.score ?? 0}%` }}
               />
             </div>
@@ -157,11 +155,11 @@ export default function Page() {
 
   const chartData = results
     ? results[0].criteria.map((c, i) => ({
-        criterion: c.label,
-        ...Object.fromEntries(
-          results.map((r) => [r.name, r.criteria[i].score ?? 0]),
-        ),
-      }))
+      criterion: c.label,
+      ...Object.fromEntries(
+        results.map((r) => [r.name, r.criteria[i].score ?? 0]),
+      ),
+    }))
     : [];
 
   return (
@@ -170,10 +168,10 @@ export default function Page() {
         eyebrow="Rotation engine"
         title={
           <>
-            Compare your <em className="text-terracotta">rotations</em>
+            Compare your <em className="text-accent">rotations</em>
           </>
         }
-        description="Three three-season strategies scored on water, nitrogen, soil health, diversity, climate and soil fit. Start with the summary, then open the details."
+        description="We compare your current rotation with two other options and show which one fits your farm best."
       />
 
       {ready && !farm && (
@@ -181,7 +179,7 @@ export default function Page() {
           <p className="text-lg">Save your farm profile to see rotation options.</p>
           <Link
             href="/farm"
-            className="mt-5 inline-block rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-paper hover:bg-terracotta-dark"
+            className="btn btn-primary mt-5"
           >
             Go to Farm profile
           </Link>
@@ -198,8 +196,8 @@ export default function Page() {
       {results && (
         <div className="space-y-6">
           {climate.status === "error" && (
-            <div className="rounded-[24px] border border-terracotta/40 bg-paper p-5 text-sm">
-              <p className="font-medium text-terracotta">
+            <div className="rounded-[24px] border border-clay/40 bg-paper p-5 text-sm">
+              <p className="font-medium text-clay">
                 Climate data could not be loaded
               </p>
               <p className="mt-1 text-muted">
@@ -217,45 +215,48 @@ export default function Page() {
             farm={farm!}
           />
 
-          <h2 className="pt-4 font-display text-3xl">Detailed breakdown</h2>
-          {results.map((s, i) => (
-            <StrategyCard key={s.id} s={s} best={s.id === bestId} index={i} />
-          ))}
+          <details className="rounded-[28px] border border-line bg-paper p-6">
+            <summary className="cursor-pointer font-display text-2xl">
+              See how each option was scored
+            </summary>
+            <div className="mt-6 space-y-6">
+              {results.map((s, i) => (
+                <StrategyCard key={s.id} s={s} best={s.id === bestId} index={i} />
+              ))}
 
-          <section className="rounded-[28px] border border-line bg-paper p-6">
-            <h2 className="font-display text-3xl">Criteria side by side</h2>
-            <div className="mt-4 h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid stroke="#e6d8c3" vertical={false} />
-                  <XAxis
-                    dataKey="criterion"
-                    tick={{ fontSize: 12, fill: "#7a6352" }}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    tick={{ fontSize: 12, fill: "#7a6352" }}
-                    width={36}
-                  />
-                  <Tooltip />
-                  <Legend />
-                  {results.map((r, i) => (
-                    <Bar key={r.id} dataKey={r.name} fill={COLORS[i]} />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
+              <section className="rounded-[28px] border border-line bg-paper p-6">
+                <h2 className="font-display text-3xl">Criteria side by side</h2>
+                <div className="mt-4 h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData}>
+                      <CartesianGrid stroke="#e4ded2" vertical={false} />
+                      <XAxis
+                        dataKey="criterion"
+                        tick={{ fontSize: 12, fill: "#6b665c" }}
+                      />
+                      <YAxis
+                        domain={[0, 100]}
+                        tick={{ fontSize: 12, fill: "#6b665c" }}
+                        width={36}
+                      />
+                      <Tooltip />
+                      <Legend />
+                      {results.map((r, i) => (
+                        <Bar key={r.id} dataKey={r.name} fill={COLORS[i]} />
+                      ))}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
             </div>
-          </section>
+          </details>
 
           <section className="rounded-[28px] border border-line bg-sand/60 p-6 text-sm text-muted">
-            <h3 className="mb-2 font-medium text-espresso">How to read this</h3>
+            <h3 className="mb-2 font-medium text-espresso">Good to know</h3>
             <ul className="list-disc space-y-1 pl-5">
-              <li>{ENGINE_NOTE}</li>
-              <li>{PARAMETERS_NOTE}</li>
-              <li>
-                Results support a discussion with an agronomist. They are not
-                instructions and do not replace local advice.
-              </li>
+              <li>Scores come from simple, open rules, not from a trained AI model.</li>
+              <li>The crop values are first estimates. An agronomist should check them for your region.</li>
+              <li>Use the result to start a conversation, not as an instruction.</li>
             </ul>
           </section>
         </div>

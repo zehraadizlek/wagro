@@ -6,7 +6,7 @@ import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
 
 const pin = L.divIcon({
   className: "",
-  html: '<div style="width:22px;height:22px;border-radius:9999px;background:#b8481f;border:3px solid #fbf7f0;box-shadow:0 0 0 6px rgba(184,72,31,0.25)"></div>',
+  html: '<div style="width:22px;height:22px;border-radius:9999px;background:#8b7355;border:3px solid #fbfaf6;box-shadow:0 0 0 6px rgba(184,72,31,0.25)"></div>',
   iconSize: [22, 22],
   iconAnchor: [11, 11],
 });

@@ -1,20 +1,29 @@
 @import "tailwindcss";
 
 @theme {
-  --color-oat: #f3ece0;
-  --color-paper: #fbf7f0;
-  --color-sand: #e6d8c3;
-  --color-line: #d8c8b0;
-  --color-espresso: #2b1d14;
-  --color-mocha: #6b4a38;
-  --color-muted: #7a6352;
-  --color-olive: #55612f;
-  --color-sage: #cdd6ad;
-  --color-terracotta: #b8481f;
-  --color-terracotta-dark: #963a17;
+  /* Calm earth palette: warm stone, soft sage, earthy brown. No orange. */
+  --color-oat: #f4f1ea;
+  --color-paper: #fbfaf6;
+  --color-sand: #ebe6dc;
+  --color-line: #dcd5c8;
+  --color-espresso: #2e3229;
+  --color-mocha: #7b6a57;
+  --color-muted: #5d5a52;
+  --color-olive: #5f7052;
+  --color-sage: #e1e6d6;
+  --color-accent: #5f7052;
+  --color-accent-dark: #4b5a40;
+  /* Earthy brown for warnings and risks. */
+  --color-clay: #9a7b62;
+
+  /* Slightly larger small text, for readability. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.5rem;
 
   --font-sans: var(--font-dm), system-ui, sans-serif;
-  --font-display: var(--font-instrument), Georgia, serif;
+  --font-display: var(--font-lora), Georgia, serif;
 }
 
 html {
@@ -25,27 +34,29 @@ body {
   background-color: var(--color-oat);
   color: var(--color-espresso);
   font-family: var(--font-sans);
+  line-height: 1.6;
 }
 
-/* very light paper grain */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  pointer-events: none;
-  opacity: 0.07;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+/* Buttons: one height, one shape, two light styles. */
+@layer components {
+  .btn {
+    @apply inline-flex h-11 min-w-40 items-center justify-center rounded-full px-6 text-sm font-medium transition-colors duration-200;
+  }
+  .btn-primary {
+    @apply bg-accent text-paper hover:bg-accent-dark;
+  }
+  .btn-ghost {
+    @apply border border-line bg-paper text-espresso hover:border-accent hover:text-accent;
+  }
 }
 
 ::selection {
-  background: var(--color-terracotta);
-  color: var(--color-paper);
+  background: var(--color-sage);
+  color: var(--color-espresso);
 }
 
 .wagro-tiles {
-  filter: sepia(0.3) saturate(0.9) brightness(0.98);
+  filter: grayscale(0.35) sepia(0.15) brightness(1.02);
 }
 
 @keyframes rise {

@@ -18,13 +18,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 px-4 pt-4 print:hidden">
-        <div className="mx-auto flex max-w-6xl items-center gap-2 rounded-full border border-line bg-paper p-1.5 shadow-[0_6px_24px_rgba(43,29,20,0.08)]">
+        <div className="mx-auto flex max-w-6xl items-center gap-2 rounded-full border border-line bg-paper p-1.5 shadow-[0_4px_16px_rgba(46,50,41,0.05)]">
           <Link
             href="/"
             className="flex shrink-0 items-center gap-1 rounded-full px-4 py-1.5 font-display text-2xl leading-none text-espresso"
           >
             wagro
-            <span className="h-2 w-2 rounded-full bg-terracotta" />
+            <span className="h-2 w-2 rounded-full bg-accent" />
           </Link>
           <nav className="flex gap-1 overflow-x-auto">
             {NAV.map((item) => {
@@ -38,8 +38,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
                     active
-                      ? "bg-espresso text-paper"
-                      : "text-muted hover:bg-sand hover:text-espresso"
+                      ? "bg-sage text-espresso"
+                      : "text-muted hover:text-espresso"
                   }`}
                 >
                   {item.label}

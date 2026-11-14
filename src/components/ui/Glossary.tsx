@@ -37,7 +37,7 @@ export default function Glossary() {
         {TERMS.map((t) => (
           <details key={t.term} className="group py-3">
             <summary className="cursor-pointer list-none font-medium marker:hidden">
-              <span className="mr-2 inline-block text-terracotta transition-transform group-open:rotate-90">
+              <span className="mr-2 inline-block text-accent transition-transform group-open:rotate-90">
                 ›
               </span>
               {t.term}

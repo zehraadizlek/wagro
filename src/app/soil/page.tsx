@@ -59,7 +59,7 @@ export default function Page() {
         eyebrow="Soil profile"
         title={
           <>
-            Your <em className="text-terracotta">soil</em>
+            Your <em className="text-accent">soil</em>
           </>
         }
         description="What you told us about your soil, kept clearly apart from anything measured from space."
@@ -72,7 +72,7 @@ export default function Page() {
           </p>
           <Link
             href="/farm"
-            className="mt-5 inline-block rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-paper hover:bg-terracotta-dark"
+            className="btn btn-primary mt-5"
           >
             Go to Farm profile
           </Link>
@@ -84,7 +84,7 @@ export default function Page() {
           <section className="rise rounded-[28px] border border-line bg-paper p-7">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-display text-4xl">Entered by you</h2>
-              <Badge tone="bg-espresso text-paper">User input</Badge>
+              <Badge tone="bg-sage text-espresso">User input</Badge>
             </div>
             <Row title="Soil type" value={label(farm.soilType)} />
             <Row
@@ -109,7 +109,7 @@ export default function Page() {
 
             <Link
               href="/farm"
-              className="mt-5 inline-block rounded-full border border-espresso px-5 py-2 text-sm font-medium hover:bg-espresso hover:text-paper"
+              className="btn btn-ghost mt-5"
             >
               Edit in Farm profile
             </Link>
@@ -121,7 +121,7 @@ export default function Page() {
           >
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-display text-4xl">From satellites</h2>
-              <Badge tone="bg-terracotta text-paper">Not connected yet</Badge>
+              <Badge tone="bg-sand text-muted">Not connected yet</Badge>
             </div>
             <p className="mb-5 text-sm text-muted">
               No soil measurements are shown here yet, and none are invented.

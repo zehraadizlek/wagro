@@ -1,30 +1,62 @@
 import type { AgroIndicators } from "@/lib/nasa/indicators";
 import { MONTH_LABELS } from "@/lib/nasa/indicators";
-import {
-  CALENDAR_NOTE,
-  FLAG_LABEL,
-  buildSeasonPlan,
-  type RiskFlag,
-} from "@/lib/rotation/calendar";
+import { buildSeasonPlan, type SeasonPlan } from "@/lib/rotation/calendar";
 import { CROP_PARAMS, type CropFamily } from "@/lib/rotation/crops";
 import type { StrategyResult } from "@/lib/rotation/engine";
-import type { FarmProfile } from "@/lib/schemas/farm";
+import type { Crop, FarmProfile } from "@/lib/schemas/farm";
 
-const FAMILY_STYLE: Record<CropFamily, string> = {
-  cereal: "bg-[#c9962e] text-espresso",
-  legume: "bg-olive text-paper",
-  oilseed: "bg-mocha text-paper",
+const FAMILY_COLOR: Record<CropFamily, string> = {
+  cereal: "#c8b48a",
+  legume: "#7d8f69",
+  oilseed: "#8b6f5c",
 };
 
-const FLAG_GLYPH: Record<RiskFlag, { glyph: string; color: string }> = {
-  frost: { glyph: "❄", color: "text-[#3d6f9e]" },
-  heat: { glyph: "▲", color: "text-terracotta" },
-  dry: { glyph: "◆", color: "text-[#b07d12]" },
-  bareRain: { glyph: "≋", color: "text-[#3d6f9e]" },
-  bareWet: { glyph: "•", color: "text-[#3d6f9e]" },
-};
+/** Only the three risks a farmer acts on are shown as icons. */
+const ICONS = {
+  frost: { icon: "❄", label: "Frost risk", short: "frost" },
+  heat: { icon: "☀", label: "Heat at flowering", short: "heat" },
+  dry: { icon: "💧", label: "Too dry, needs water", short: "dry spells" },
+} as const;
+type IconFlag = keyof typeof ICONS;
+const ICON_FLAGS = Object.keys(ICONS) as IconFlag[];
 
-const FLAGS = Object.keys(FLAG_LABEL) as RiskFlag[];
+const EMPTY = "repeating-linear-gradient(135deg, #e4ded2 0 3px, transparent 3px 7px)";
+const EMPTY_RAIN = "repeating-linear-gradient(135deg, #b9c7c9 0 3px, transparent 3px 7px)";
+
+const name = (c: Crop) => CROP_PARAMS[c].label.toLowerCase();
+const monthName = (m: number) => MONTH_LABELS[m - 1];
+
+/** Two short, plain sentences for one rotation. */
+function plainNotes(plan: SeasonPlan): string[] {
+  const notes: string[] = [];
+
+  const longest = [...plan.gaps].sort((a, b) => b.months - a.months)[0];
+  if (longest && longest.months >= 3) {
+    const from = monthName((longest.startIndex % 12) + 1);
+    const to = monthName(((longest.startIndex + longest.months - 1) % 12) + 1);
+    notes.push(
+      `The field stays empty for ${longest.months} months after ${name(longest.after)} (${from} to ${to}).${
+        longest.exposedMonths ? " Rain can wash bare soil away then, so a cover crop would help." : ""
+      }`,
+    );
+  } else {
+    notes.push("The field is almost never left empty.");
+  }
+
+  // One short line for all risks, with months merged across crops.
+  const risks = ICON_FLAGS.map((flag) => {
+    const months = new Set<number>();
+    for (const cell of plan.cells) {
+      if (cell.crop && cell.flags.includes(flag)) months.add(cell.month);
+    }
+    if (!months.size) return null;
+    const list = [...months].sort((a, b) => a - b).map(monthName).join(", ");
+    return `${ICONS[flag].icon} ${ICONS[flag].short} in ${list}`;
+  }).filter((r): r is string => r !== null);
+  if (risks.length) notes.push(`Watch for: ${risks.join(" · ")}`);
+
+  return notes;
+}
 
 export default function SeasonTimeline({
   results,
@@ -35,112 +67,104 @@ export default function SeasonTimeline({
   indicators: AgroIndicators | null;
   farm: FarmProfile;
 }) {
-  const plans = results.map((r) => ({
-    r,
-    plan: buildSeasonPlan(r.sequence, indicators, farm),
-  }));
-
   return (
     <section className="break-inside-avoid rounded-[28px] border border-line bg-paper p-6">
-      <h2 className="font-display text-3xl">Through the seasons</h2>
+      <h2 className="font-display text-3xl">Your field, month by month</h2>
       <p className="mt-1 mb-5 text-sm text-muted">
-        Each square is one month, from the first sowing until the rotation
-        starts over. Striped squares are months when the field is bare. Symbols
-        mark months that the last {indicators ? Math.round(indicators.years) : 10}{" "}
-        years of NASA POWER data suggest are risky.
+        Coloured squares: a crop is growing. Striped squares: the field is
+        empty. Icons show months that are often risky in your area.
       </p>
 
-      {!indicators && (
-        <p className="mb-4 rounded-2xl bg-sand/70 p-3 text-xs text-muted">
-          Climate data is not available, so only bare months are shown, without
-          risk symbols.
-        </p>
-      )}
-
       <div className="space-y-6">
-        {plans.map(({ r, plan }) => (
-          <div key={r.id}>
-            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-              <h3 className="font-medium">{r.name}</h3>
-              <span className="text-xs text-muted">
-                Bare {plan.bareMonths} of {plan.cycleMonths} months
-              </span>
-            </div>
-            <div className="overflow-x-auto pb-1">
-              <div className="flex gap-[3px] print:flex-wrap">
-                {plan.cells.map((cell) => {
-                  const fam = cell.crop ? CROP_PARAMS[cell.crop].family : null;
-                  const title = [
-                    `${MONTH_LABELS[cell.month - 1]}: ${
-                      cell.crop
-                        ? `${CROP_PARAMS[cell.crop].label}${cell.phase === "sow" ? " (sowing)" : cell.phase === "harvest" ? " (harvest)" : ""}`
-                        : "bare field"
-                    }`,
-                    ...cell.flags.map((f) => FLAG_LABEL[f]),
-                  ].join(" · ");
-                  return (
-                    <div
-                      key={cell.index}
-                      title={title}
-                      className="flex w-7 shrink-0 flex-col items-center"
-                    >
-                      <div
-                        className={`flex h-8 w-7 items-center justify-center rounded-md text-[10px] font-semibold ${
-                          fam
-                            ? FAMILY_STYLE[fam]
-                            : "bare-stripes border border-line text-muted"
-                        }`}
-                      >
-                        {cell.crop && cell.phase === "sow"
-                          ? CROP_PARAMS[cell.crop].label.slice(0, 2)
-                          : ""}
-                      </div>
-                      <div className="flex h-4 items-center gap-px text-[10px] leading-none">
-                        {cell.flags.map((f) => (
-                          <span key={f} className={FLAG_GLYPH[f].color}>
-                            {FLAG_GLYPH[f].glyph}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="text-[10px] text-muted">
-                        {MONTH_LABELS[cell.month - 1][0]}
-                      </div>
-                    </div>
-                  );
-                })}
+        {results.map((r) => {
+          const plan = buildSeasonPlan(r.sequence, indicators, farm);
+          return (
+            <div key={r.id}>
+              <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="font-medium">
+                  {r.name}{" "}
+                  <span className="font-normal text-muted">
+                    · {r.sequence.map((c) => CROP_PARAMS[c].label).join(" → ")}
+                  </span>
+                </h3>
+                <span className="text-xs text-muted">
+                  Empty {plan.bareMonths} of {plan.cycleMonths} months
+                </span>
               </div>
+
+              <div className="overflow-x-auto pb-1">
+                <div className="flex gap-[3px] print:flex-wrap">
+                  {plan.cells.map((cell) => {
+                    const fam = cell.crop ? CROP_PARAMS[cell.crop].family : null;
+                    const rainy = !cell.crop && cell.flags.length > 0;
+                    const icons = ICON_FLAGS.filter((f) => cell.flags.includes(f));
+                    return (
+                      <div
+                        key={cell.index}
+                        title={`${monthName(cell.month)}: ${cell.crop ? CROP_PARAMS[cell.crop].label : "empty field"}`}
+                        className="flex w-7 shrink-0 flex-col items-center"
+                      >
+                        <div
+                          className="flex h-8 w-7 items-center justify-center rounded-md border border-line text-[10px] font-semibold text-espresso"
+                          style={{
+                            background: fam ? FAMILY_COLOR[fam] : rainy ? EMPTY_RAIN : EMPTY,
+                            borderColor: fam ? "transparent" : undefined,
+                          }}
+                        >
+                          {cell.crop && cell.phase === "sow"
+                            ? CROP_PARAMS[cell.crop].label.slice(0, 2)
+                            : ""}
+                        </div>
+                        <div className="flex h-4 items-center text-[10px] leading-none">
+                          {icons.map((f) => (
+                            <span key={f}>{ICONS[f].icon}</span>
+                          ))}
+                        </div>
+                        <div className="text-[10px] text-muted">
+                          {monthName(cell.month)[0]}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <ul className="mt-2 space-y-1 text-sm text-muted">
+                {plainNotes(plan).map((n, i) => (
+                  <li key={i}>{n}</li>
+                ))}
+              </ul>
             </div>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted">
-              {plan.notes.map((n, i) => (
-                <li key={i}>{n}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-line pt-4 text-xs text-muted">
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-sm bg-[#c9962e]" /> Cereal
+          <span className="h-3 w-3 rounded-sm" style={{ background: FAMILY_COLOR.cereal }} /> Cereal
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-sm bg-olive" /> Legume
+          <span className="h-3 w-3 rounded-sm" style={{ background: FAMILY_COLOR.legume }} /> Legume
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-sm bg-mocha" /> Oilseed
+          <span className="h-3 w-3 rounded-sm" style={{ background: FAMILY_COLOR.oilseed }} /> Oilseed
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="bare-stripes h-3 w-3 rounded-sm border border-line" />{" "}
-          Bare field
+          <span className="h-3 w-3 rounded-sm border border-line" style={{ background: EMPTY }} /> Empty field
         </span>
-        {FLAGS.map((f) => (
-          <span key={f} className="flex items-center gap-1.5">
-            <span className={FLAG_GLYPH[f].color}>{FLAG_GLYPH[f].glyph}</span>
-            {FLAG_LABEL[f]}
+        <span className="flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded-sm border border-line" style={{ background: EMPTY_RAIN }} /> Empty in a rainy month
+        </span>
+        {ICON_FLAGS.map((f) => (
+          <span key={f}>
+            {ICONS[f].icon} {ICONS[f].label}
           </span>
         ))}
       </div>
-      <p className="mt-3 text-xs text-muted">{CALENDAR_NOTE}</p>
+      <p className="mt-3 text-xs text-muted">
+        Sowing and harvest months are typical dates. Yours may differ.
+        {!indicators && " Weather data is missing, so no risk icons are shown."}
+      </p>
     </section>
   );
 }

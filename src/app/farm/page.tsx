@@ -25,7 +25,7 @@ const LocationPicker = dynamic(
 );
 
 const input =
-  "w-full rounded-xl border border-line bg-oat px-4 py-2.5 text-sm text-espresso outline-none transition placeholder:text-muted/60 focus:border-terracotta focus:ring-2 focus:ring-terracotta/20";
+  "w-full rounded-xl border border-line bg-oat px-4 py-2.5 text-sm text-espresso outline-none transition placeholder:text-muted/60 focus:border-accent focus:ring-2 focus:ring-accent/20";
 
 const toNum = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const label = (s: string) =>
@@ -46,8 +46,8 @@ function Chip({
       onClick={onClick}
       className={`rounded-full border px-4 py-1.5 text-sm transition-colors duration-200 ${
         active
-          ? "border-espresso bg-espresso text-paper"
-          : "border-line bg-paper text-muted hover:border-espresso hover:text-espresso"
+          ? "border-accent bg-sage text-espresso"
+          : "border-line bg-paper text-muted hover:border-accent hover:text-espresso"
       }`}
     >
       {children}
@@ -68,7 +68,7 @@ function Field({
     <div>
       <div className="mb-2 text-sm font-medium text-espresso">{title}</div>
       {children}
-      {error && <p className="mt-1 text-xs text-terracotta">{error}</p>}
+      {error && <p className="mt-1 text-xs text-clay">{error}</p>}
     </div>
   );
 }
@@ -270,7 +270,7 @@ function FarmForm({ initial }: { initial: FarmProfile | null }) {
         </div>
         <button
           type="submit"
-          className="w-full rounded-full bg-terracotta px-6 py-3 text-base font-semibold text-paper transition-all duration-200 hover:-translate-y-0.5 hover:bg-terracotta-dark hover:shadow-[0_10px_24px_rgba(184,72,31,0.3)] active:translate-y-0"
+          className="btn btn-primary w-full"
         >
           Save farm profile
         </button>
@@ -280,7 +280,7 @@ function FarmForm({ initial }: { initial: FarmProfile | null }) {
           </p>
         )}
         {saveFailed && (
-          <p className="rounded-2xl border border-terracotta/40 bg-paper px-4 py-2 text-sm text-terracotta">
+          <p className="rounded-2xl border border-clay/40 bg-paper px-4 py-2 text-sm text-clay">
             Your browser blocked saving. Turn off private mode or allow site
             data, then try again.
           </p>
@@ -299,7 +299,7 @@ export default function Page() {
         eyebrow="Step 1"
         title={
           <>
-            Your <em className="text-terracotta">farm</em>
+            Your <em className="text-accent">farm</em>
           </>
         }
         description="Tell us about your farm and drop a pin on the map. Everything is saved in your browser only."
