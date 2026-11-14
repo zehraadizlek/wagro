@@ -22,6 +22,7 @@ const ICON_FLAGS = Object.keys(ICONS) as IconFlag[];
 
 const EMPTY = "repeating-linear-gradient(135deg, #e4ded2 0 3px, transparent 3px 7px)";
 const EMPTY_RAIN = "repeating-linear-gradient(135deg, #b9c7c9 0 3px, transparent 3px 7px)";
+const COVER = "repeating-linear-gradient(135deg, #b5c4a0 0 4px, #dfe6d3 4px 8px)";
 
 const name = (c: Crop) => CROP_PARAMS[c].label.toLowerCase();
 const monthName = (m: number) => MONTH_LABELS[m - 1];
@@ -35,9 +36,11 @@ function plainNotes(plan: SeasonPlan): string[] {
     const from = monthName((longest.startIndex % 12) + 1);
     const to = monthName(((longest.startIndex + longest.months - 1) % 12) + 1);
     notes.push(
-      `The field stays empty for ${longest.months} months after ${name(longest.after)} (${from} to ${to}).${
-        longest.exposedMonths ? " Rain can wash bare soil away then, so a cover crop would help." : ""
-      }`,
+      longest.coveredMonths
+        ? `After ${name(longest.after)} (${from} to ${to}) a cover crop protects the soil for ${longest.coveredMonths} of ${longest.months} months.`
+        : `The field stays empty for ${longest.months} months after ${name(longest.after)} (${from} to ${to}).${
+            longest.exposedMonths ? " Rain can wash bare soil away then, so a cover crop would help." : ""
+          }`,
     );
   } else {
     notes.push("The field is almost never left empty.");
@@ -77,7 +80,9 @@ export default function SeasonTimeline({
 
       <div className="space-y-6">
         {results.map((r) => {
-          const plan = buildSeasonPlan(r.sequence, indicators, farm);
+          const plan = buildSeasonPlan(r.sequence, indicators, farm, {
+            cover: r.coverCrops,
+          });
           return (
             <div key={r.id}>
               <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
@@ -85,6 +90,7 @@ export default function SeasonTimeline({
                   {r.name}{" "}
                   <span className="font-normal text-muted">
                     · {r.sequence.map((c) => CROP_PARAMS[c].label).join(" → ")}
+                    {r.coverCrops && " + cover crop"}
                   </span>
                 </h3>
                 <span className="text-xs text-muted">
@@ -96,18 +102,24 @@ export default function SeasonTimeline({
                 <div className="flex gap-[3px] print:flex-wrap">
                   {plan.cells.map((cell) => {
                     const fam = cell.crop ? CROP_PARAMS[cell.crop].family : null;
-                    const rainy = !cell.crop && cell.flags.length > 0;
+                    const rainy = !cell.crop && !cell.cover && cell.flags.length > 0;
                     const icons = ICON_FLAGS.filter((f) => cell.flags.includes(f));
                     return (
                       <div
                         key={cell.index}
-                        title={`${monthName(cell.month)}: ${cell.crop ? CROP_PARAMS[cell.crop].label : "empty field"}`}
+                        title={`${monthName(cell.month)}: ${cell.crop ? CROP_PARAMS[cell.crop].label : cell.cover ? "cover crop" : "empty field"}`}
                         className="flex w-7 shrink-0 flex-col items-center"
                       >
                         <div
                           className="flex h-8 w-7 items-center justify-center rounded-md border border-line text-[10px] font-semibold text-espresso"
                           style={{
-                            background: fam ? FAMILY_COLOR[fam] : rainy ? EMPTY_RAIN : EMPTY,
+                            background: fam
+                              ? FAMILY_COLOR[fam]
+                              : cell.cover
+                                ? COVER
+                                : rainy
+                                  ? EMPTY_RAIN
+                                  : EMPTY,
                             borderColor: fam ? "transparent" : undefined,
                           }}
                         >
@@ -148,6 +160,9 @@ export default function SeasonTimeline({
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-3 w-3 rounded-sm" style={{ background: FAMILY_COLOR.oilseed }} /> Oilseed
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded-sm border border-line" style={{ background: COVER }} /> Cover crop
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-3 w-3 rounded-sm border border-line" style={{ background: EMPTY }} /> Empty field

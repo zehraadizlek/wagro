@@ -14,7 +14,9 @@ import {
 } from "recharts";
 import PageHeader from "@/components/ui/PageHeader";
 import RecommendationCard from "@/components/rotation/RecommendationCard";
+import CropRoles from "@/components/rotation/CropRoles";
 import SeasonTimeline from "@/components/rotation/SeasonTimeline";
+import StrategyCards from "@/components/rotation/StrategyCards";
 import { useClimate } from "@/lib/nasa/use-climate";
 import { CROP_PARAMS } from "@/lib/rotation/crops";
 import {
@@ -24,7 +26,7 @@ import {
 } from "@/lib/rotation/engine";
 import { useFarm } from "@/lib/storage/use-farm";
 
-const COLORS = ["#8b7355", "#7d8f69", "#3f4a3a"];
+const COLORS = ["#8b7355", "#7d8f69", "#3f4a3a", "#b9a77f"];
 
 function StrategyCard({
   s,
@@ -141,8 +143,8 @@ export default function Page() {
   const results = useMemo(() => {
     if (!farm || climate.status === "loading" || climate.status === "idle")
       return null;
-    return evaluateStrategies(farm, climate.summary);
-  }, [farm, climate.status, climate.summary]);
+    return evaluateStrategies(farm, climate.summary, climate.indicators);
+  }, [farm, climate.status, climate.summary, climate.indicators]);
 
   const rec = useMemo(
     () => (farm && results ? buildRecommendation(farm, results) : null),
@@ -171,7 +173,7 @@ export default function Page() {
             Compare your <em className="text-accent">rotations</em>
           </>
         }
-        description="We compare your current rotation with two other options and show which one fits your farm best."
+        description="We compare your current rotation with three other options and show which one fits your farm best."
       />
 
       {ready && !farm && (
@@ -209,11 +211,15 @@ export default function Page() {
 
           {rec && <RecommendationCard rec={rec} results={results} />}
 
+          <StrategyCards results={results} bestId={bestId} />
+
           <SeasonTimeline
             results={results}
             indicators={climate.indicators}
             farm={farm!}
           />
+
+          <CropRoles />
 
           <details className="rounded-[28px] border border-line bg-paper p-6">
             <summary className="cursor-pointer font-display text-2xl">

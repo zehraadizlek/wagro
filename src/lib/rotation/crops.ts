@@ -41,6 +41,16 @@ export type CropParams = {
   frostTolerant: boolean;
   /** Daily maximum temperature (°C) above which flowering and grain fill are assumed to suffer. */
   heatStressC: 30 | 32 | 35;
+  /** Relative value as animal feed (hay, silage, straw, grazing), 0 to 5. */
+  forageValue: number;
+  /** Relative ease of selling at a fair price, 1 to 5. */
+  marketValue: number;
+  /** How deep the roots usually reach. Deep roots open the subsoil and reach stored water. */
+  rootDepth: "shallow" | "medium" | "deep";
+  /** Copes comparatively well with dry spells. */
+  droughtTolerant: boolean;
+  /** Needs a row-crop (precision) planter. */
+  needsRowPlanter: boolean;
 };
 
 export const CROP_PARAMS: Record<Crop, CropParams> = {
@@ -58,6 +68,11 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     calendar: { sowMonths: [10, 11], harvestMonth: 7 },
     frostTolerant: true,
     heatStressC: 32,
+    forageValue: 2,
+    marketValue: 4,
+    rootDepth: "medium",
+    droughtTolerant: false,
+    needsRowPlanter: false,
   },
   barley: {
     crop: "barley",
@@ -73,6 +88,11 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     calendar: { sowMonths: [10, 11], harvestMonth: 6 },
     frostTolerant: true,
     heatStressC: 32,
+    forageValue: 3,
+    marketValue: 3,
+    rootDepth: "medium",
+    droughtTolerant: true,
+    needsRowPlanter: false,
   },
   corn: {
     crop: "corn",
@@ -88,6 +108,11 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     calendar: { sowMonths: [4, 5], harvestMonth: 10 },
     frostTolerant: false,
     heatStressC: 35,
+    forageValue: 4,
+    marketValue: 4,
+    rootDepth: "medium",
+    droughtTolerant: false,
+    needsRowPlanter: true,
   },
   chickpea: {
     crop: "chickpea",
@@ -103,6 +128,11 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     calendar: { sowMonths: [3, 4], harvestMonth: 7 },
     frostTolerant: false,
     heatStressC: 32,
+    forageValue: 1,
+    marketValue: 4,
+    rootDepth: "medium",
+    droughtTolerant: true,
+    needsRowPlanter: false,
   },
   lentil: {
     crop: "lentil",
@@ -118,6 +148,11 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     calendar: { sowMonths: [11, 12], harvestMonth: 6 },
     frostTolerant: true,
     heatStressC: 30,
+    forageValue: 2,
+    marketValue: 4,
+    rootDepth: "shallow",
+    droughtTolerant: true,
+    needsRowPlanter: false,
   },
   sunflower: {
     crop: "sunflower",
@@ -133,7 +168,88 @@ export const CROP_PARAMS: Record<Crop, CropParams> = {
     calendar: { sowMonths: [4, 5], harvestMonth: 9 },
     frostTolerant: false,
     heatStressC: 35,
+    forageValue: 1,
+    marketValue: 4,
+    rootDepth: "deep",
+    droughtTolerant: true,
+    needsRowPlanter: true,
   },
+  vetch: {
+    crop: "vetch",
+    label: "Vetch",
+    family: "legume",
+    waterDemand: 2,
+    nitrogenBalance: 2,
+    soilHealth: 4.5,
+    tempRangeC: [5, 20],
+    rainRangeMm: [300, 600],
+    phRange: [6, 8],
+    soilTypeFit: { sandy: 75, loamy: 100, clay: 80, silty: 90 },
+    calendar: { sowMonths: [10, 11], harvestMonth: 5 },
+    frostTolerant: true,
+    heatStressC: 30,
+    forageValue: 5,
+    marketValue: 3,
+    rootDepth: "medium",
+    droughtTolerant: false,
+    needsRowPlanter: false,
+  },
+  sorghum: {
+    crop: "sorghum",
+    label: "Sorghum",
+    family: "cereal",
+    waterDemand: 2.5,
+    nitrogenBalance: -1.5,
+    soilHealth: 3,
+    tempRangeC: [18, 32],
+    rainRangeMm: [350, 650],
+    phRange: [5.5, 8],
+    soilTypeFit: { sandy: 80, loamy: 100, clay: 85, silty: 90 },
+    calendar: { sowMonths: [5], harvestMonth: 9 },
+    frostTolerant: false,
+    heatStressC: 35,
+    forageValue: 4,
+    marketValue: 3,
+    rootDepth: "deep",
+    droughtTolerant: true,
+    needsRowPlanter: true,
+  },
+  safflower: {
+    crop: "safflower",
+    label: "Safflower",
+    family: "oilseed",
+    waterDemand: 2,
+    nitrogenBalance: -1,
+    soilHealth: 3.5,
+    tempRangeC: [10, 28],
+    rainRangeMm: [250, 500],
+    phRange: [6, 8],
+    soilTypeFit: { sandy: 70, loamy: 95, clay: 80, silty: 85 },
+    calendar: { sowMonths: [3, 4], harvestMonth: 8 },
+    frostTolerant: false,
+    heatStressC: 35,
+    forageValue: 1,
+    marketValue: 3,
+    rootDepth: "deep",
+    droughtTolerant: true,
+    needsRowPlanter: false,
+  },
+};
+
+/**
+ * A cover crop grown in empty months and not harvested, for example a
+ * vetch and rye mix. Prototype assumptions, like the crops above.
+ */
+export const COVER_CROP = {
+  label: "Cover crop (e.g. vetch + rye)",
+  /** Added to the nitrogen balance when a legume mix is used. */
+  nitrogenBonus: 0.3,
+  /** Added to the organic matter score. */
+  soilBonus: 12,
+  /** Subtracted from the water score without irrigation, because covers also use water. */
+  waterPenalty: 6,
+  /** Shortest empty spell, in months, worth filling with a cover crop. */
+  minGapMonths: 4,
 };
 
 export const CROP_LIST: CropParams[] = Object.values(CROP_PARAMS);

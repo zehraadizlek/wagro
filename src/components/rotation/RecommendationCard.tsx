@@ -29,7 +29,7 @@ export default function RecommendationCard({
         {rec.headline}
       </h2>
 
-      <div className="mt-6 grid gap-3 md:grid-cols-3">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {sorted.map((r, i) => (
           <div
             key={r.id}
@@ -48,6 +48,7 @@ export default function RecommendationCard({
             </div>
             <div className="mt-1 text-sm text-muted">
               {r.sequence.map((c) => CROP_PARAMS[c].label).join(" → ")}
+              {r.coverCrops && " + cover crop"}
             </div>
           </div>
         ))}

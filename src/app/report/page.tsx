@@ -23,7 +23,7 @@ import {
 } from "@/lib/rotation/engine";
 import { useFarm } from "@/lib/storage/use-farm";
 
-const COLORS = ["#8b7355", "#7d8f69", "#3f4a3a"];
+const COLORS = ["#8b7355", "#7d8f69", "#3f4a3a", "#b9a77f"];
 const label = (s: string) =>
   s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, " ");
 
@@ -58,8 +58,8 @@ export default function Page() {
   const results = useMemo(() => {
     if (!farm || climate.status === "loading" || climate.status === "idle")
       return null;
-    return evaluateStrategies(farm, climate.summary);
-  }, [farm, climate.status, climate.summary]);
+    return evaluateStrategies(farm, climate.summary, climate.indicators);
+  }, [farm, climate.status, climate.summary, climate.indicators]);
 
   const rec = useMemo(
     () => (farm && results ? buildRecommendation(farm, results) : null),
@@ -131,6 +131,12 @@ export default function Page() {
           k="Priorities"
           v={farm.priorities.length ? farm.priorities.map(label).join(", ") : "None selected"}
         />
+        <Row
+          k="Crops you can sell"
+          v={farm.marketCrops.length ? farm.marketCrops.map(label).join(", ") : "Any"}
+        />
+        <Row k="Row-crop planter" v={farm.hasRowPlanter ? "Yes" : "No"} />
+        <Row k="Open to cover crops" v={farm.coverCropsOk ? "Yes" : "No"} />
       </Section>
 
       <Section title="2. Climate (satellite-derived)">

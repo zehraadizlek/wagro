@@ -1,7 +1,6 @@
 import type { AgroIndicators, MonthClimate } from "@/lib/nasa/indicators";
-import { MONTH_LABELS } from "@/lib/nasa/indicators";
 import type { Crop, FarmProfile } from "@/lib/schemas/farm";
-import { CROP_PARAMS } from "./crops";
+import { COVER_CROP, CROP_PARAMS } from "./crops";
 
 /**
  * Lays a rotation out month by month, using assumed crop calendars and the
@@ -28,6 +27,8 @@ export type TimelineCell = {
   month: number;
   crop: Crop | null;
   phase: "sow" | "grow" | "harvest" | null;
+  /** True when a cover crop protects the soil in an otherwise empty month. */
+  cover: boolean;
   flags: RiskFlag[];
 };
 
@@ -38,16 +39,20 @@ export type BareGap = {
   months: number;
   /** Months in the gap flagged bareRain or bareWet. */
   exposedMonths: number;
+  /** Months in the gap covered by a cover crop. */
+  coveredMonths: number;
 };
 
 export type SeasonPlan = {
   cells: TimelineCell[];
   /** Months until the rotation starts over. */
   cycleMonths: number;
+  /** Months with neither a crop nor a cover crop. */
   bareMonths: number;
+  /** Bare months that usually get heavy or above-demand rain. */
+  exposedMonths: number;
   gaps: BareGap[];
   counts: Record<RiskFlag, number>;
-  notes: string[];
 };
 
 const monthOf = (index: number) => (index % 12) + 1;
@@ -59,11 +64,6 @@ function firstIndex(from: number, months: number[]): number {
     if (months.includes(monthOf(i))) return i;
   }
   return from;
-}
-
-function listMonths(months: number[]): string {
-  const uniq = [...new Set(months)].sort((a, b) => a - b);
-  return uniq.map((m) => MONTH_LABELS[m - 1]).join(", ");
 }
 
 function inFieldFlags(
@@ -103,6 +103,7 @@ export function buildSeasonPlan(
   sequence: Crop[],
   indicators: AgroIndicators | null,
   farm: FarmProfile,
+  opts: { cover?: boolean } = {},
 ): SeasonPlan {
   const south = farm.latitude < 0;
   const cal = (c: Crop) => {
@@ -128,6 +129,17 @@ export function buildSeasonPlan(
   const restart = firstIndex(cursor, cal(sequence[0]).sow);
   const cycleEnd = restart - 1;
 
+  // Long empty spells get a cover crop, leaving a month after harvest and a
+  // month before sowing for field work.
+  const coverIdx = new Set<number>();
+  if (opts.cover) {
+    placed.forEach((p, k) => {
+      const nextStart = k + 1 < placed.length ? placed[k + 1].start : restart;
+      if (nextStart - p.harvest - 1 < COVER_CROP.minGapMonths) return;
+      for (let i = p.harvest + 2; i <= nextStart - 2; i++) coverIdx.add(i);
+    });
+  }
+
   const climate = (m: number) => indicators?.months[m - 1] ?? null;
   const cells: TimelineCell[] = [];
   for (let i = firstStart; i <= cycleEnd; i++) {
@@ -140,6 +152,7 @@ export function buildSeasonPlan(
         month,
         crop: slot.crop,
         phase: i === slot.start ? "sow" : i === slot.harvest ? "harvest" : "grow",
+        cover: false,
         flags: c
           ? inFieldFlags(slot.crop, c, slot.harvest - i, farm.irrigation)
           : [],
@@ -150,7 +163,8 @@ export function buildSeasonPlan(
         month,
         crop: null,
         phase: null,
-        flags: c ? bareFlags(c) : [],
+        cover: coverIdx.has(i),
+        flags: c && !coverIdx.has(i) ? bareFlags(c) : [],
       });
     }
   }
@@ -166,6 +180,7 @@ export function buildSeasonPlan(
       startIndex: p.harvest + 1,
       months: gapCells.length,
       exposedMonths: gapCells.filter((c) => c.flags.length > 0).length,
+      coveredMonths: gapCells.filter((c) => c.cover).length,
     };
   });
 
@@ -175,65 +190,8 @@ export function buildSeasonPlan(
   for (const cell of cells) for (const f of cell.flags) counts[f] += 1;
 
   const cycleMonths = cells.length;
-  const bareMonths = cells.filter((c) => c.crop === null).length;
-  const notes: string[] = [];
-
-  notes.push(
-    `The field is bare for ${bareMonths} of every ${cycleMonths} months (${Math.round(
-      (100 * bareMonths) / Math.max(1, cycleMonths),
-    )}%) in this rotation.`,
-  );
-
-  const longest = [...gaps].sort((a, b) => b.months - a.months)[0];
-  if (longest && longest.months >= 3) {
-    const startMonth = MONTH_LABELS[monthOf(longest.startIndex) - 1];
-    const endMonth =
-      MONTH_LABELS[monthOf(longest.startIndex + longest.months - 1) - 1];
-    notes.push(
-      `Longest bare spell: ${longest.months} months (${startMonth} to ${endMonth}) after ${CROP_PARAMS[longest.after].label.toLowerCase()} and before ${CROP_PARAMS[longest.before].label.toLowerCase()}.${
-        longest.exposedMonths
-          ? ` In ${longest.exposedMonths} of those months rain usually falls on uncovered soil, which raises the risk of erosion and nutrient loss. A cover crop or crop residue could protect the soil.`
-          : ""
-      }`,
-    );
-  }
-
-  if (indicators) {
-    for (const p of placed) {
-      const label = CROP_PARAMS[p.crop].label;
-      const flagged = (f: RiskFlag) =>
-        cells
-          .filter((c) => c.crop === p.crop && c.index >= p.start && c.index <= p.harvest && c.flags.includes(f))
-          .map((c) => c.month);
-      const frost = flagged("frost");
-      const heat = flagged("heat");
-      const dry = flagged("dry");
-      if (frost.length)
-        notes.push(
-          `${label}: frost is common in ${listMonths(frost)} while it is in the field${
-            CROP_PARAMS[p.crop].frostTolerant ? ", close to flowering" : ""
-          }. Sowing date and variety choice matter here.`,
-        );
-      if (heat.length)
-        notes.push(
-          `${label}: days of ${CROP_PARAMS[p.crop].heatStressC} °C or more are common in ${listMonths(heat)}, during flowering and grain fill.`,
-        );
-      if (dry.length)
-        notes.push(
-          `${label}: rain covers less than half of the evaporative demand in ${listMonths(dry)}${
-            farm.irrigation === "none" ? ", and you have no irrigation" : ""
-          }.`,
-        );
-    }
-  }
-
-  // Dedupe notes for rotations that repeat a crop.
-  return {
-    cells,
-    cycleMonths,
-    bareMonths,
-    gaps,
-    counts,
-    notes: [...new Set(notes)],
-  };
+  const bare = cells.filter((c) => c.crop === null && !c.cover);
+  const bareMonths = bare.length;
+  const exposedMonths = bare.filter((c) => c.flags.length > 0).length;
+  return { cells, cycleMonths, bareMonths, exposedMonths, gaps, counts };
 }

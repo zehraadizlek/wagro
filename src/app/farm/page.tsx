@@ -96,6 +96,15 @@ function FarmForm({ initial }: { initial: FarmProfile | null }) {
   const [priorities, setPriorities] = useState<string[]>(
     initial?.priorities ?? [],
   );
+  const [marketCrops, setMarketCrops] = useState<string[]>(
+    initial?.marketCrops ?? [],
+  );
+  const [hasRowPlanter, setHasRowPlanter] = useState(
+    initial?.hasRowPlanter ?? true,
+  );
+  const [coverCropsOk, setCoverCropsOk] = useState(
+    initial?.coverCropsOk ?? true,
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
@@ -123,6 +132,9 @@ function FarmForm({ initial }: { initial: FarmProfile | null }) {
       soilType,
       soilPh: soilPh.trim() === "" ? null : Number(soilPh),
       priorities,
+      marketCrops,
+      hasRowPlanter,
+      coverCropsOk,
     });
     if (!result.success) {
       const next: Record<string, string> = {};
@@ -222,7 +234,7 @@ function FarmForm({ initial }: { initial: FarmProfile | null }) {
             placeholder="e.g. 6.8"
           />
         </Field>
-        <Field title="Priorities">
+        <Field title="What matters most to you">
           <div className="flex flex-wrap gap-2">
             {PRIORITIES.map((c) => (
               <Chip
@@ -235,6 +247,46 @@ function FarmForm({ initial }: { initial: FarmProfile | null }) {
             ))}
           </div>
         </Field>
+
+        <div className="space-y-5 border-t border-line pt-5">
+          <p className="text-sm text-muted">
+            Your limits. Wagro only suggests crops you can actually grow and
+            sell.
+          </p>
+          <Field title="Crops you can sell nearby (leave empty if any)">
+            <div className="flex flex-wrap gap-2">
+              {CROPS.map((c) => (
+                <Chip
+                  key={c}
+                  active={marketCrops.includes(c)}
+                  onClick={() => toggle(marketCrops, c, setMarketCrops)}
+                >
+                  {label(c)}
+                </Chip>
+              ))}
+            </div>
+          </Field>
+          <Field title="Do you have a row-crop planter? (needed for corn, sunflower, sorghum)">
+            <div className="flex flex-wrap gap-2">
+              <Chip active={hasRowPlanter} onClick={() => setHasRowPlanter(true)}>
+                Yes
+              </Chip>
+              <Chip active={!hasRowPlanter} onClick={() => setHasRowPlanter(false)}>
+                No
+              </Chip>
+            </div>
+          </Field>
+          <Field title="Cover crops (sown in empty months, not harvested)">
+            <div className="flex flex-wrap gap-2">
+              <Chip active={coverCropsOk} onClick={() => setCoverCropsOk(true)}>
+                Open to it
+              </Chip>
+              <Chip active={!coverCropsOk} onClick={() => setCoverCropsOk(false)}>
+                Not for me
+              </Chip>
+            </div>
+          </Field>
+        </div>
       </section>
 
       <section

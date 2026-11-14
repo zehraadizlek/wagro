@@ -7,6 +7,9 @@ export const CROPS = [
   "barley",
   "lentil",
   "corn",
+  "vetch",
+  "sorghum",
+  "safflower",
 ] as const;
 export type Crop = (typeof CROPS)[number];
 
@@ -27,6 +30,9 @@ export const PRIORITIES = [
   "soil-health",
   "nitrogen-management",
   "crop-diversity",
+  "erosion-control",
+  "extra-income",
+  "animal-feed",
 ] as const;
 export type Priority = (typeof PRIORITIES)[number];
 
@@ -58,6 +64,12 @@ export const farmProfileSchema = z.object({
     .max(10, "pH must be between 3 and 10")
     .nullable(),
   priorities: z.array(z.enum(PRIORITIES)),
+  /** Crops the farmer can sell nearby. Empty means no limit. */
+  marketCrops: z.array(z.enum(CROPS)).default([]),
+  /** Whether the farm has a row-crop planter (needed for corn, sunflower, sorghum). */
+  hasRowPlanter: z.boolean().default(true),
+  /** Whether the farmer is open to cover crops that are not harvested. */
+  coverCropsOk: z.boolean().default(true),
 });
 
 export type FarmProfile = z.infer<typeof farmProfileSchema>;
