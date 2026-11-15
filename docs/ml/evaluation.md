@@ -22,7 +22,7 @@ planted; the rest are the naturally most unusual synthetic months.
 | Weak combined: 5 features at ±1.5 SD | 11/50 (recall 0.22, precision 0.12) | 1/50 |
 
 - Stability across 5 seeds (Jaccard of flagged months): mean **0.76**, min 0.64.
-- Fit + score of 360 months: **7.9 ms** (Node v24.19.0).
+- Fit + score of 360 months: **11.4 ms** (Node v24.19.0).
 
 **Reading:** both methods find single large deviations. Isolation Forest adds
 value for months where several features are moderately off at once, which a
@@ -58,9 +58,9 @@ Plausibility only. "Unusual" includes wet as well as dry months.
 Synthetic 10-year weather; 72 farm variants
 (6 priority sets × irrigation none/full × cover crops yes/no × current crop wheat/corn/chickpea).
 
-- Best searched option scores at least as high as the best hand-built strategy in **72 of 72** variants; mean gain **5.11** points, max 9.
+- Best searched option scores at least as high as the best hand-built strategy in **72 of 72** variants; mean gain **5.19** points, max 9.
 - Constraint violations in returned options (same family back to back, cover crops when refused, repeating the current crop first): **0**.
-- 3 seasons: 96 candidates, Pareto front 36, 1.2 ms. 4 seasons: 702 candidates, front 162, 14.2 ms (Node v24.19.0).
+- 3 seasons: 96 candidates, Pareto front 28, 1.7 ms. 4 seasons: 702 candidates, front 146, 17.2 ms (Node v24.19.0).
 
 **Reading:** the gain is measured on the same rule-based criteria the search
 optimizes, so it shows the search works, not that the rotations are better in

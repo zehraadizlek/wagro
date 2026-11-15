@@ -106,7 +106,7 @@ export default function LastTenYears({
             {sameEverywhere
               ? `${data.byType.find((t) => t.best)?.best?.name} does best in dry, normal and wet years. A steady choice.`
               : dryBest
-                ? `The best option changes with the weather. In dry years, ${dryBest.name.toLowerCase()} holds up best.`
+                ? `The best option changes with the weather. In dry years, ${dryBest.name.charAt(0).toLowerCase()}${dryBest.name.slice(1)} holds up best.`
                 : "The best option changes with the weather."}
           </p>
         </>
