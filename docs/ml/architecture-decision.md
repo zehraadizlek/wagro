@@ -56,7 +56,15 @@ Measured on 2026-11-15 through the dev server: 30 years → 360 monthly rows,
 now, can be trimmed by dropping raw values or compressing keys). 10 years at
 lat −33.9, lon 18.9 → 38 KB.
 
-## Performance targets (to be measured in Phases 3–4)
+## Performance (measured 2026-11-15)
+
+- Isolation Forest, fit + score of 360 months: ≈ 8 ms (Node).
+- Optimizer: 3 seasons ≈ 2 ms, 4 seasons ≈ 18 ms (Node).
+- Results page, one what-if slider step (recomputes 10-year indicators, all
+  strategies and the optimizer, then re-renders): **37–94 ms in the browser**
+  (Next.js dev mode). No Web Worker is needed.
+
+## Performance targets (original)
 
 | Task | Size | Target |
 |---|---|---|

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Built and evaluated on synthetic tests** (2026-11-15). Not yet shown in the app (Phase 6). |
+| Status | **Built and evaluated on synthetic tests** (2026-11-15). Shown in the "Unusual months" card and as a note in the recommendation. |
 | Method label shown in the app | ML (unsupervised) |
 | Code | `src/lib/ml/isolation-forest.ts`, `src/lib/ml/anomaly.ts` |
 | Version | `anomaly-iforest-1` |

@@ -26,7 +26,10 @@ export const MIN_AMPLITUDE = 0.08;
 export type SeasonYear = {
   year: number;
   peakMonth: number;
+  /** Null when the land was already green at the start of the year (winter crops). */
   greenUpMonth: number | null;
+  /** True when the green period runs back into January, so it began the year before. */
+  greenFromYearStart: boolean;
   declineMonth: number | null;
   peakNdvi: number;
   amplitude: number;
@@ -35,7 +38,13 @@ export type SeasonYear = {
 export type Phenology = {
   years: SeasonYear[];
   /** Median over years, or null when no year qualified. */
-  typical: { peakMonth: number; greenUpMonth: number | null; declineMonth: number | null } | null;
+  typical: {
+    peakMonth: number;
+    greenUpMonth: number | null;
+    declineMonth: number | null;
+    /** Most years were already green in January. */
+    greenFromYearStart: boolean;
+  } | null;
   /** Calendar months with mean NDVI below the low-cover threshold. */
   lowCoverMonths: number[];
 };
@@ -80,10 +89,14 @@ export function phenology(points: NdviPoint[]): Phenology {
         break;
       }
     }
+    // Reaching January means the season started the previous year; the
+    // calendar-year window cannot see when, so no green-up month is given.
+    const fromStart = greenUp === 1;
     years.push({
       year,
       peakMonth: peakIdx + 1,
-      greenUpMonth: greenUp,
+      greenUpMonth: fromStart ? null : greenUp,
+      greenFromYearStart: fromStart,
       declineMonth: decline,
       peakNdvi: Math.round(max * 100) / 100,
       amplitude: Math.round(amplitude * 100) / 100,
@@ -107,6 +120,7 @@ export function phenology(points: NdviPoint[]): Phenology {
             peakMonth: typicalPeak,
             greenUpMonth: median(years.map((y) => y.greenUpMonth).filter((m): m is number => m !== null)),
             declineMonth: median(years.map((y) => y.declineMonth).filter((m): m is number => m !== null)),
+            greenFromYearStart: years.filter((y) => y.greenFromYearStart).length * 2 > years.length,
           },
     lowCoverMonths: means
       .map((v, i) => (v !== null && v < LOW_COVER_NDVI ? i + 1 : null))

@@ -1,6 +1,6 @@
 # WAGRO — Machine learning and optimization
 
-Status on 2026-11-15: **Phases 1–5 done.** The first ML component (unusual-month
+Status on 2026-11-15: **Phases 1–6 done.** The first ML component (unusual-month
 detection, unsupervised) is built and evaluated on synthetic tests, but **not
 yet shown in the app** (Phase 6). No supervised model is trained. The app
 still runs the rule-based engine and the existing statistics.
@@ -33,6 +33,12 @@ still runs the rule-based engine and the existing statistics.
 - The optimizer's best rotation is added as a fifth option, "Best balance found", when it differs from the hand-built four; otherwise the matching option says the search found nothing better.
 - The recommendation can add two information-only notes: recent unusual months (ML, unsupervised) and a satellite-versus-calendar timing mismatch (Statistics). Neither changes any score.
 - `predictSuitability()` exists and always returns "not-trained".
+
+## Phase 6 display (what the user sees)
+- A small method badge (Rule-based, Statistics, ML (unsupervised), Optimization) on the suggestion, every option card, "Your last 10 years", "Plant cover" and "Unusual months".
+- "Unusual months" card: recent and strongest flags from the Isolation Forest, plus single extreme values the model did not flag (labelled Statistics), with a one-line limitation.
+- "Plant cover" adds season timing (green-up or "green through winter", peak, fade) and whether it fits the crop calendar.
+- The How page lists the methods with badges and the status of each model, including the untrained suitability model.
 
 Rules for this work: never fabricate training data, never call a rule-based
 score an ML prediction, and keep the rule-based engine as the working fallback.

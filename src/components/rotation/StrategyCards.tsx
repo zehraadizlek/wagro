@@ -1,3 +1,4 @@
+import MethodBadge from "@/components/ml/MethodBadge";
 import { CROP_PARAMS } from "@/lib/rotation/crops";
 import type { StrategyResult } from "@/lib/rotation/engine";
 
@@ -36,6 +37,9 @@ export default function StrategyCards({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="font-display text-2xl leading-tight">{r.name}</h3>
+                <div className="mt-1">
+                  <MethodBadge method={r.method} />
+                </div>
                 <p className="mt-1 text-sm text-muted">
                   {r.sequence.map((c) => CROP_PARAMS[c].label).join(" → ")}
                   {r.coverCrops && " + cover crop"}

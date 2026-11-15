@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Built and tested** (2026-11-15). Used for a calendar check in the recommendation; its own display comes in Phase 6. |
+| Status | **Built and tested** (2026-11-15). Shown in "Plant cover on your field" and used for a calendar check. |
 | Method label shown in the app | Statistics |
 | Code | `src/lib/features/phenology.ts`, `src/lib/features/use-ndvi.ts` |
 | Tests | `src/lib/features/phenology.test.ts` |
@@ -21,6 +21,12 @@ Per season, smooth the monthly series, take its minimum and maximum, and mark
 green-up and decline where the curve crosses 20 % and 50 % of the seasonal
 amplitude (the common amplitude-threshold approach, as used by tools such as
 TIMESAT). Low-cover months are those below an NDVI of 0.2.
+
+## Winter crops
+When the green period already runs at the start of January, the season began
+the previous year and the calendar-year window cannot see when. The method then
+reports "green through winter" instead of a green-up month. This was found on
+the real series, where an earlier version said "greens up in January".
 
 ## Limitations
 Monthly steps are coarse (± one month). The footprint mixes neighbouring fields.

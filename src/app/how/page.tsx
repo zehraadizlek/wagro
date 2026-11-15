@@ -1,5 +1,7 @@
 import Link from "next/link";
+import MethodBadge from "@/components/ml/MethodBadge";
 import PageHeader from "@/components/ui/PageHeader";
+import { MODEL_CARDS, type MethodLabel } from "@/lib/ml/model-cards";
 
 const DATA = [
   ["NASA POWER", "Daily weather for 10 years: temperature, rain, humidity, wind, sun, soil wetness.", "about 50 km"],
@@ -18,12 +20,19 @@ const STEPS = [
   "Stress-test the result: warmer or drier scenarios, and dry, normal and wet years.",
 ];
 
-const METHODS = [
-  ["Rules and a water budget", "Used for the scores. Every number can be traced and explained."],
-  ["Mann-Kendall test and Sen's slope", "Used for trends. Tells whether a rise or fall is real or could be chance."],
-  ["k-means clustering", "Used to sort years into dry, normal and wet, and test each option in each."],
-  ["Machine-learning yield models", "Not used. They need local yield records we do not have, and their answers are hard to explain."],
+const METHODS: [string, MethodLabel, string][] = [
+  ["Rules and a water budget", "rule-based", "Score each option on 8 things. Every number can be traced and explained."],
+  ["Search over every rotation", "optimization", "Scores all rotations you can grow with the same rules and keeps the best balance. It cannot be smarter than the rules."],
+  ["Trend tests, year types, plant-cover seasons", "statistics", "Mann-Kendall and Sen's slope for trends, k-means for dry, normal and wet years, and NDVI timing for green-up and peak."],
+  ["Isolation Forest", "ml-unsupervised", "Learns what a normal month looks like at your pin from 30 years of NASA data and flags rare ones. It needs no labels, and it does not detect crop damage."],
 ];
+
+const STATUS_TEXT = {
+  "not-built": "not built",
+  built: "built and tested",
+  evaluated: "built and evaluated",
+  blocked: "not available: no training data yet",
+} as const;
 
 const UNCERTAIN = [
   "Weather and satellite data describe an area, not your exact field. Coarser data (GRACE, SMAP) speaks for the region.",
@@ -95,10 +104,27 @@ export default function Page() {
         </Section>
 
         <Section title="Methods we chose">
-          <ul className="space-y-2">
-            {METHODS.map(([name, why]) => (
+          <ul className="space-y-3">
+            {METHODS.map(([name, method, why]) => (
               <li key={name}>
-                <b className="font-medium">{name}.</b> <span className="text-muted">{why}</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <b className="font-medium">{name}</b>
+                  <MethodBadge method={method} />
+                </div>
+                <p className="text-muted">{why}</p>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-muted">
+            <b className="font-medium text-espresso">Not used:</b> machine-learning
+            yield or suitability models. They need local yield records that we
+            have not been able to get yet, so Wagro shows no prediction from them.
+          </p>
+          <h3 className="mt-4 font-medium">Status of each method</h3>
+          <ul className="mt-1 space-y-1 text-muted">
+            {MODEL_CARDS.map((c) => (
+              <li key={c.id}>
+                {c.name}: {STATUS_TEXT[c.status]}.
               </li>
             ))}
           </ul>

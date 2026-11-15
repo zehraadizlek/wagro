@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import MethodBadge from "@/components/ml/MethodBadge";
 import { computeIndicators } from "@/lib/nasa/indicators";
 import { groupYears, pooledSummary, splitYears, trendTest, type TrendTest, type YearType } from "@/lib/nasa/stats";
 import type { ClimateRecord } from "@/lib/nasa/use-climate";
@@ -69,7 +70,10 @@ export default function LastTenYears({
 
   return (
     <section className="rounded-[28px] border border-line bg-paper p-6">
-      <h2 className="font-display text-3xl">Your last {data.years} years</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-display text-3xl">Your last {data.years} years</h2>
+        <MethodBadge method="statistics" />
+      </div>
       <ul className="mt-3 space-y-1 text-sm">
         <li>{trendLine("Temperature", data.temp, " °C", 1)}</li>
         <li>{trendLine("Rain", data.rain, "%", 0)}</li>

@@ -1,3 +1,4 @@
+import MethodBadge from "@/components/ml/MethodBadge";
 import { CROP_PARAMS } from "@/lib/rotation/crops";
 import type { Recommendation, StrategyResult } from "@/lib/rotation/engine";
 
@@ -22,14 +23,17 @@ export default function RecommendationCard({
 
   return (
     <section className="rise rounded-[28px] border border-line bg-sage p-6 md:p-8">
-      <p className="text-xs font-medium uppercase tracking-[0.16em] text-olive">
-        Our suggestion
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-medium uppercase tracking-[0.16em] text-olive">
+          Our suggestion
+        </p>
+        <MethodBadge method={sorted[0].method} />
+      </div>
       <h2 className="mt-2 font-display text-3xl leading-snug md:text-4xl">
         {rec.headline}
       </h2>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {sorted.map((r, i) => (
           <div
             key={r.id}

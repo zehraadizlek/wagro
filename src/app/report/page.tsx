@@ -24,7 +24,7 @@ import {
 import { useFarm } from "@/lib/storage/use-farm";
 import { useTerrain } from "@/lib/terrain/use-terrain";
 
-const COLORS = ["#8b7355", "#7d8f69", "#3f4a3a", "#b9a77f"];
+const COLORS = ["#8b7355", "#7d8f69", "#3f4a3a", "#b9a77f", "#5f7052"];
 const label = (s: string) =>
   s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, " ");
 
@@ -229,6 +229,10 @@ export default function Page() {
                   {r.name}
                   <div className="text-xs font-normal text-muted">
                     {r.sequence.map((c) => CROP_PARAMS[c].label).join(" → ")}
+                    {r.coverCrops && " + cover crop"}
+                  </div>
+                  <div className="text-[11px] font-normal text-muted">
+                    {r.method === "optimization" ? "Optimization" : "Rule-based"}
                   </div>
                 </th>
               ))}

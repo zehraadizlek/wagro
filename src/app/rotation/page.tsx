@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
 import GrowingConditions from "@/components/climate/GrowingConditions";
 import LastTenYears from "@/components/climate/LastTenYears";
+import UnusualMonths from "@/components/climate/UnusualMonths";
 import CropRoles from "@/components/rotation/CropRoles";
 import RecommendationCard from "@/components/rotation/RecommendationCard";
 import ScenarioPanel from "@/components/rotation/ScenarioPanel";
@@ -128,6 +129,8 @@ export default function Page() {
             <LastTenYears record={climate.record} farm={farm} terrain={terrainInput} />
           )}
 
+          <UnusualMonths anomalies={anomalies} />
+
           <FieldRiskMap
             lat={farm.latitude}
             lng={farm.longitude}
@@ -139,7 +142,7 @@ export default function Page() {
 
           <SeasonTimeline results={results} indicators={indicators} farm={farm} />
 
-          <PlantGrowth lat={farm.latitude} lng={farm.longitude} />
+          <PlantGrowth lat={farm.latitude} lng={farm.longitude} crop={farm.currentCrop} />
 
           <SatelliteMap lat={farm.latitude} lng={farm.longitude} />
 

@@ -25,7 +25,7 @@ describe("phenology", () => {
   });
 
   it("summarizes a typical season and low-cover months", () => {
-    expect(p.typical).toEqual({ peakMonth: 5, greenUpMonth: 3, declineMonth: 7 });
+    expect(p.typical).toEqual({ peakMonth: 5, greenUpMonth: 3, declineMonth: 7, greenFromYearStart: false });
     expect(p.lowCoverMonths).toEqual([1, 8, 9, 10, 11, 12]);
   });
 
@@ -67,6 +67,8 @@ describe("real NDVI series (lat 39, lon 33) — plausibility only", () => {
     expect(p.typical!.peakMonth).toBeGreaterThanOrEqual(4);
     expect(p.typical!.peakMonth).toBeLessThanOrEqual(6);
     expect(checkCalendar(p, "wheat", 39)!.agrees).toBe(true);
+    // Most years were already green in January (a winter crop), so no green-up month is claimed.
+    expect(p.typical!.greenFromYearStart).toBe(true);
     // 2025 had a much weaker season than 2024 and 2026.
     const amp = Object.fromEntries(p.years.map((y) => [y.year, y.amplitude]));
     expect(amp[2025]).toBeLessThan(amp[2024] / 2);
