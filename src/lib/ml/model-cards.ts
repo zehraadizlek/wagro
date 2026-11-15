@@ -55,10 +55,11 @@ export const MODEL_CARDS: ModelCard[] = [
     id: "optimizer",
     name: "Rotation optimizer",
     method: "optimization",
-    status: "not-built",
+    status: "evaluated",
     purpose: "Searches all allowed crop sequences for the best balance of the eight criteria.",
     data: "The rule-based criteria; no training data.",
-    evaluation: null,
+    evaluation:
+      "Exact Pareto front checked against brute force; constraints never violated in tests; 3 seasons ≈ 9 ms, 4 seasons ≈ 75 ms (Node).",
     limitations: ["Only as good as the rule-based criteria and crop values."],
     doc: "docs/ml/model-cards/rotation-optimizer.md",
   },

@@ -1,6 +1,6 @@
 # WAGRO — Machine learning and optimization
 
-Status on 2026-11-15: **Phases 1–3 done.** The first ML component (unusual-month
+Status on 2026-11-15: **Phases 1–4 done.** The first ML component (unusual-month
 detection, unsupervised) is built and evaluated on synthetic tests, but **not
 yet shown in the app** (Phase 6). No supervised model is trained. The app
 still runs the rule-based engine and the existing statistics.
@@ -14,7 +14,7 @@ still runs the rule-based engine and the existing statistics.
 | Component | Method label | Status |
 |---|---|---|
 | Environmental anomaly detection | ML (unsupervised) | **Built and evaluated** (synthetic tests); UI in Phase 6 |
-| Rotation optimization | Optimization | Not built — Phase 4 |
+| Rotation optimization | Optimization | **Built and tested** (exhaustive Pareto search); UI in Phase 5–6 |
 | NDVI phenology | Statistics | Not built — Phase 5 |
 | Crop suitability / yield anomaly | ML (trained) | **Blocked** — needs a verified TÜİK district export |
 
