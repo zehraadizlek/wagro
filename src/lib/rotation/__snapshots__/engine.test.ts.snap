@@ -1,0 +1,86 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`evaluateStrategies > matches the recorded output (guards the Phase 4 refactor) 1`] = `
+[
+  {
+    "coverCrops": false,
+    "criteria": {
+      "climate": 81,
+      "diversity": 25,
+      "erosion": 85,
+      "income": 57,
+      "nitrogen": 19,
+      "soilFit": 100,
+      "soilHealth": 16,
+      "water": 48,
+    },
+    "id": "current",
+    "overall": 48,
+    "sequence": [
+      "wheat",
+      "barley",
+      "wheat",
+    ],
+  },
+  {
+    "coverCrops": false,
+    "criteria": {
+      "climate": 73,
+      "diversity": 100,
+      "erosion": 38,
+      "income": 46,
+      "nitrogen": 57,
+      "soilFit": 98,
+      "soilHealth": 58,
+      "water": 56,
+    },
+    "id": "legume",
+    "overall": 63,
+    "sequence": [
+      "barley",
+      "chickpea",
+      "safflower",
+    ],
+  },
+  {
+    "coverCrops": false,
+    "criteria": {
+      "climate": 73,
+      "diversity": 100,
+      "erosion": 38,
+      "income": 46,
+      "nitrogen": 57,
+      "soilFit": 98,
+      "soilHealth": 58,
+      "water": 56,
+    },
+    "id": "diversified",
+    "overall": 63,
+    "sequence": [
+      "chickpea",
+      "safflower",
+      "barley",
+    ],
+  },
+  {
+    "coverCrops": true,
+    "criteria": {
+      "climate": 73,
+      "diversity": 100,
+      "erosion": 80,
+      "income": 46,
+      "nitrogen": 66,
+      "soilFit": 98,
+      "soilHealth": 70,
+      "water": 45,
+    },
+    "id": "cover",
+    "overall": 68,
+    "sequence": [
+      "chickpea",
+      "safflower",
+      "barley",
+    ],
+  },
+]
+`;

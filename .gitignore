@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ML raw and derived data (never committed)
+/ml/data/raw/
+/ml/data/processed/
+/ml/.venv/
+.venv/

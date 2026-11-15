@@ -46,10 +46,15 @@ Measured on 2026-11-15 at lat 39, lon 33:
 | POWER monthly, 31 years, 9 parameters | 53 KB | 1.7 s |
 
 Heat-day and frost-night counts need **daily** data. Shipping 1.6 MB to the
-browser is avoidable: Phase 2 adds a **new** route that fetches 30 years of
-daily data on the server and returns a compact monthly feature table
-(target < 60 KB). The existing `/api/nasa-power` route and its 10-year daily
-use stay unchanged.
+browser is avoidable: Phase 2 added a **new** route,
+`/api/nasa-power/monthly?lat&lng&years=10..30`, that fetches daily data on
+the server and returns a monthly feature table with anomalies. The existing
+`/api/nasa-power` route and its 10-year daily use are unchanged.
+
+Measured on 2026-11-15 through the dev server: 30 years → 360 monthly rows,
+**106 KB uncompressed** in 1.7–3.4 s (above the 60 KB target; acceptable for
+now, can be trimmed by dropping raw values or compressing keys). 10 years at
+lat −33.9, lon 18.9 → 38 KB.
 
 ## Performance targets (to be measured in Phases 3–4)
 
@@ -61,8 +66,9 @@ use stay unchanged.
 
 ## Tests
 
-Vitest is added as the only new dev dependency (TypeScript and the `@/` path
-alias work without extra setup). Python dependencies live only in
+Vitest **4.1.12** is the only new dev dependency (TypeScript and the `@/`
+path alias work without extra setup). Vitest 5.0.5 was rejected because its
+peer range requires `@types/node` ≥ 22 and the project pins `@types/node` 20. Python dependencies live only in
 `ml/requirements.txt`.
 
 ## Labels shown to users
