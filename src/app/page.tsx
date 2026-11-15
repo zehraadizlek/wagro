@@ -41,7 +41,11 @@ export default function Page() {
   return (
     <section className="rise mx-auto flex min-h-[calc(100vh-15rem)] max-w-2xl flex-col items-center justify-center text-center">
       <WheatStalk />
-      <h1 className="mt-6 font-display text-4xl leading-tight text-espresso md:text-6xl">
+      <div className="mt-3 flex items-center gap-1.5 font-display text-4xl leading-none text-espresso md:text-5xl">
+        wagro
+        <span className="h-2.5 w-2.5 rounded-full bg-accent md:h-3 md:w-3" aria-hidden="true" />
+      </div>
+      <h1 className="mt-8 font-display text-4xl leading-tight text-espresso md:text-6xl">
         What should go in the ground <em className="text-accent">next?</em>
       </h1>
       <p className="mt-4 max-w-lg text-lg text-muted">
