@@ -5,7 +5,7 @@ exports[`evaluateStrategies > matches the recorded output (guards the Phase 4 re
   {
     "coverCrops": false,
     "criteria": {
-      "climate": 81,
+      "climate": 82,
       "diversity": 25,
       "erosion": 85,
       "income": 57,
@@ -15,7 +15,7 @@ exports[`evaluateStrategies > matches the recorded output (guards the Phase 4 re
       "water": 48,
     },
     "id": "current",
-    "overall": 48,
+    "overall": 49,
     "sequence": [
       "wheat",
       "barley",
@@ -85,7 +85,7 @@ exports[`evaluateStrategies > matches the recorded output (guards the Phase 4 re
   {
     "coverCrops": true,
     "criteria": {
-      "climate": 80,
+      "climate": 81,
       "diversity": 100,
       "erosion": 83,
       "income": 50,

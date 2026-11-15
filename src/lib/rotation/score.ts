@@ -106,11 +106,15 @@ export function cropClimateFit(
     parts.push(clamp(100 - 8 * dist));
   }
   if (climate.annualPrecipMm !== null) {
-    const [lo] = p.rainRangeMm;
-    let fit = climate.annualPrecipMm >= lo ? 100 : (100 * climate.annualPrecipMm) / lo;
+    const [lo, hi] = p.rainRangeMm;
+    const rain = climate.annualPrecipMm;
+    // Too little rain: irrigation can make up the shortfall.
+    let fit = rain >= lo ? 100 : (100 * rain) / lo;
     const gap = 100 - fit;
     if (irrigation === "limited") fit += gap * 0.5;
     if (irrigation === "full") fit = 100;
+    // Too much rain (above the crop's range): irrigation cannot help.
+    if (rain > hi) fit = Math.min(fit, (100 * hi) / rain);
     parts.push(clamp(fit));
   }
   return parts.length ? avg(parts) : null;
@@ -346,12 +350,12 @@ function climateScore(
     return {
       score: avg(fits),
       expl:
-        "Compares the last year of temperature and rainfall at your location with assumed crop ranges. Monthly data was missing, so seasonal frost, heat and drought are not included.",
+        "Compares the 10-year average temperature and yearly rain at your location with each crop's prototype ranges (too little and too much rain). Monthly data was missing, so seasonal frost, heat and drought are not included.",
     };
   const season = seasonalStress(plan, indicators, irrigation);
   return {
     score: 0.5 * avg(fits) + 0.5 * season.score,
-    expl: `Half comes from how last year's average temperature and rain match each crop. Half comes from the growing months: ${season.stressedMonths} of ${season.growingMonths} usually bring frost, heat or drought for the crop in the field.`,
+    expl: `Half is long-term fit: how the 10-year average temperature and yearly rain match each crop's prototype ranges (too little and too much rain). Half comes from the growing months: ${season.stressedMonths} of ${season.growingMonths} usually bring frost, heat or drought for the crop in the field.`,
   };
 }
 

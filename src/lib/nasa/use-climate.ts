@@ -5,7 +5,7 @@ import type { FarmProfile } from "@/lib/schemas/farm";
 import { computeIndicators, type AgroIndicators } from "./indicators";
 import type { DailyPoint } from "./power";
 import { rangeFor } from "./range";
-import { lastYearSummary, type ClimateSummary } from "./scenario";
+import { climatologySummary, lastYearSummary, type ClimateSummary } from "./scenario";
 
 export type { ClimateSummary } from "./scenario";
 
@@ -21,6 +21,7 @@ export type ClimateRecord = {
 
 type Payload = {
   summary: ClimateSummary;
+  climatology: ClimateSummary;
   indicators: AgroIndicators;
   record: ClimateRecord;
 };
@@ -28,8 +29,10 @@ type Result = { key: string; data?: Payload; error?: string };
 
 export type ClimateState = {
   status: "idle" | "loading" | "error" | "done";
-  /** Last 12 months, used by the scoring engine. */
+  /** Last 12 months: recent-year context only, not used for scoring. */
   summary: ClimateSummary | null;
+  /** Long-term means over the 10-year record, used by the scoring engine. */
+  climatology: ClimateSummary | null;
   /** Monthly climatology and indicators over the last 10 years. */
   indicators: AgroIndicators | null;
   /** Daily record, for "what if" scenarios. */
@@ -38,8 +41,9 @@ export type ClimateState = {
 };
 
 /**
- * Loads 10 years of NASA POWER data for the saved farm location. The last
- * 12 months feed the scoring engine; the full record feeds the indicators.
+ * Loads 10 years of NASA POWER data for the saved farm location. The
+ * 10-year means feed the scoring engine and the indicators; the last 12
+ * months are kept as recent-year context.
  */
 export function useClimate(farm: FarmProfile | null): ClimateState {
   const [result, setResult] = useState<Result | null>(null);
@@ -64,6 +68,7 @@ export function useClimate(farm: FarmProfile | null): ClimateState {
           key,
           data: {
             summary: lastYearSummary(points, json.retrievedAt),
+            climatology: climatologySummary(points, json.retrievedAt),
             indicators: computeIndicators(points, lat, elevationM),
             record: { points, elevationM, retrievedAt: json.retrievedAt },
           },
@@ -80,7 +85,7 @@ export function useClimate(farm: FarmProfile | null): ClimateState {
     return () => controller.abort();
   }, [lat, lng, key]);
 
-  const empty = { summary: null, indicators: null, record: null };
+  const empty = { summary: null, climatology: null, indicators: null, record: null };
   if (!farm) return { status: "idle", ...empty, error: null };
   const current = result && result.key === key ? result : null;
   if (!current) return { status: "loading", ...empty, error: null };
@@ -89,6 +94,7 @@ export function useClimate(farm: FarmProfile | null): ClimateState {
   return {
     status: "done",
     summary: current.data.summary,
+    climatology: current.data.climatology,
     indicators: current.data.indicators,
     record: current.data.record,
     error: null,

@@ -63,11 +63,11 @@ export default function Page() {
       return null;
     return evaluateStrategies(
       farm,
-      climate.summary,
+      climate.climatology,
       climate.indicators,
       slope === null ? null : { meanSlopePct: slope },
     );
-  }, [farm, climate.status, climate.summary, climate.indicators, slope]);
+  }, [farm, climate.status, climate.climatology, climate.indicators, slope]);
 
   const rec = useMemo(
     () => (farm && results ? buildRecommendation(farm, results) : null),
@@ -151,7 +151,7 @@ export default function Page() {
         {s ? (
           <>
             <Row k="Mean temperature, last 12 months" v={s.meanTemp === null ? "n/a" : `${s.meanTemp.toFixed(1)} °C`} />
-            <Row k="Precipitation, scaled to a year" v={s.annualPrecipMm === null ? "n/a" : `${Math.round(s.annualPrecipMm)} mm`} />
+            <Row k="Precipitation, last 12 months (scaled to a year)" v={s.annualPrecipMm === null ? "n/a" : `${Math.round(s.annualPrecipMm)} mm`} />
             <Row k="Period" v={`${s.start} to ${s.end}`} />
             <Row k="Missing days" v={`${s.missingDays} of ${s.days}`} />
             <Row k="Retrieved" v={new Date(s.retrievedAt).toLocaleString()} />

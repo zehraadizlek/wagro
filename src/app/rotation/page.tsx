@@ -55,8 +55,8 @@ export default function Page() {
   const baseResults = useMemo(() => {
     if (!farm || climate.status === "loading" || climate.status === "idle")
       return null;
-    return evaluateStrategies(farm, climate.summary, climate.indicators, terrainInput);
-  }, [farm, climate.status, climate.summary, climate.indicators, terrainInput]);
+    return evaluateStrategies(farm, climate.climatology, climate.indicators, terrainInput);
+  }, [farm, climate.status, climate.climatology, climate.indicators, terrainInput]);
 
   // Same daily record, shifted by the scenario.
   const shiftedClimate = useMemo(() => {
@@ -67,7 +67,7 @@ export default function Page() {
 
   const results = useMemo(() => {
     if (!farm || !baseResults || !shiftedClimate) return baseResults;
-    return evaluateStrategies(farm, shiftedClimate.summary, shiftedClimate.indicators, terrainInput);
+    return evaluateStrategies(farm, shiftedClimate.climatology, shiftedClimate.indicators, terrainInput);
   }, [farm, baseResults, shiftedClimate, terrainInput]);
 
   const indicators = shiftedClimate?.indicators ?? climate.indicators;

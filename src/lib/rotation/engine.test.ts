@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computeIndicators } from "@/lib/nasa/indicators";
-import { lastYearSummary } from "@/lib/nasa/scenario";
+import { climatologySummary } from "@/lib/nasa/scenario";
 import type { FarmProfile } from "@/lib/schemas/farm";
 import { syntheticDaily } from "@/lib/testing/synthetic";
 import { CROP_PARAMS } from "./crops";
@@ -22,7 +22,7 @@ const farm: FarmProfile = {
   coverCropsOk: true,
 };
 const points = syntheticDaily({ years: 10 });
-const summary = lastYearSummary(points, "2026-01-01T00:00:00Z");
+const summary = climatologySummary(points, "2026-01-01T00:00:00Z");
 const indicators = computeIndicators(points, 39, 1000);
 
 /** The parts of a result that the UI shows and the optimizer will depend on. */

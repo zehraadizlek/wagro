@@ -1,5 +1,6 @@
 import { computeIndicators, type AgroIndicators } from "./indicators";
 import { summarize, type DailyPoint } from "./power";
+import { splitYears } from "./stats";
 
 /**
  * "What if" scenarios using the delta method: every day of the historical
@@ -29,9 +30,41 @@ export type ClimateSummary = {
   start: string;
   end: string;
   retrievedAt: string;
+  /** Complete 12-month periods behind the values (climatology only). */
+  years?: number;
 };
 
-/** Summary of the last 12 months, used by the scoring engine. */
+/** Fewest complete years accepted for a long-term climate summary. */
+export const MIN_CLIMATOLOGY_YEARS = 5;
+
+/**
+ * Long-term climate for the scoring engine: the mean temperature and the
+ * mean yearly rain over every complete 12-month period in the record
+ * (normally 10). A period counts for a value only when it has at least 300
+ * days of that value. With fewer than MIN_CLIMATOLOGY_YEARS usable periods
+ * the value is null and the engine leaves it out; nothing is filled in.
+ */
+export function climatologySummary(points: DailyPoint[], retrievedAt: string): ClimateSummary {
+  const years = splitYears(points);
+  const mean = (xs: (number | null)[]) => {
+    const v = xs.filter((x): x is number => x !== null);
+    return v.length >= MIN_CLIMATOLOGY_YEARS ? v.reduce((a, b) => a + b, 0) / v.length : null;
+  };
+  const used = points.slice(points.length - years.length * 365);
+  const s = summarize(used);
+  return {
+    meanTemp: mean(years.map((y) => y.meanTemp)),
+    annualPrecipMm: mean(years.map((y) => y.precipMm)),
+    days: s.days,
+    missingDays: Math.max(s.missingTempDays, s.missingPrecipDays),
+    start: used[0]?.date ?? "",
+    end: used[used.length - 1]?.date ?? "",
+    retrievedAt,
+    years: years.length,
+  };
+}
+
+/** Summary of the last 12 months: recent-year context, not used for scoring. */
 export function lastYearSummary(points: DailyPoint[], retrievedAt: string): ClimateSummary {
   const lastYear = points.slice(-365);
   const s = summarize(lastYear);
@@ -74,10 +107,10 @@ export function scenarioClimate(
   latDeg: number,
   elevationM: number | null,
   retrievedAt: string,
-): { summary: ClimateSummary; indicators: AgroIndicators } {
+): { climatology: ClimateSummary; indicators: AgroIndicators } {
   const shifted = applyScenario(points, s);
   return {
-    summary: lastYearSummary(shifted, retrievedAt),
+    climatology: climatologySummary(shifted, retrievedAt),
     indicators: computeIndicators(shifted, latDeg, elevationM),
   };
 }

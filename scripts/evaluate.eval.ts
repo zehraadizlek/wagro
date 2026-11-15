@@ -15,7 +15,7 @@ import realMonthly from "@/lib/ml/__fixtures__/monthly-features-39n-33e.json";
 import { detectAnomalies, featureMatrix } from "@/lib/ml/anomaly";
 import { mulberry32 } from "@/lib/ml/random";
 import { computeIndicators } from "@/lib/nasa/indicators";
-import { lastYearSummary } from "@/lib/nasa/scenario";
+import { climatologySummary } from "@/lib/nasa/scenario";
 import { CROP_PARAMS } from "@/lib/rotation/crops";
 import { evaluateStrategies } from "@/lib/rotation/engine";
 import { optimizeRotation } from "@/lib/rotation/optimize";
@@ -132,7 +132,7 @@ ${realRows}
 
 function optimizerSection(): string {
   const points = syntheticDaily({ years: 10 });
-  const summary = lastYearSummary(points, "2026-01-01T00:00:00Z");
+  const summary = climatologySummary(points, "2026-01-01T00:00:00Z");
   const indicators = computeIndicators(points, 39, 1000);
   const base: FarmProfile = {
     name: "Eval", latitude: 39, longitude: 33, areaHa: 20, currentCrop: "wheat",

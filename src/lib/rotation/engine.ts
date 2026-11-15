@@ -276,7 +276,7 @@ export function evaluateStrategies(
 
   const evidence = [
     hasClimate
-      ? "NASA POWER: the last 12 months of temperature and rain at your location."
+      ? "NASA POWER: 10-year average temperature and yearly rain at your location."
       : null,
     hasMonthly
       ? "NASA POWER: 10 years of monthly rain, frost, heat and evaporation."
