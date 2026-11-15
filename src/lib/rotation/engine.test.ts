@@ -143,6 +143,14 @@ describe("buildRecommendation", () => {
     expect(rec.discuss.length).toBe(3);
   });
 
+  it("warns when even the best option scores poorly", () => {
+    const results = evaluateStrategies(farm, summary, indicators).map((r) => ({ ...r, overall: 40 }));
+    const rec = buildRecommendation(farm, results);
+    expect(rec.cautions.join(" ")).toMatch(/may not suit your area/);
+    const ok = buildRecommendation(farm, evaluateStrategies(farm, summary, indicators));
+    expect(ok.cautions.join(" ")).not.toMatch(/may not suit your area/);
+  });
+
   it("adds an information-only note about recent unusual months", () => {
     const results = evaluateStrategies(farm, summary, indicators);
     const without = buildRecommendation(farm, results);

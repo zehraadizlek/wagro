@@ -147,7 +147,7 @@ export default function Page() {
         <Row k="Open to cover crops" v={farm.coverCropsOk ? "Yes" : "No"} />
       </Section>
 
-      <Section title="2. Climate (satellite-derived)">
+      <Section title="2. Climate (NASA data)">
         {s ? (
           <>
             <Row k="Mean temperature, last 12 months" v={s.meanTemp === null ? "n/a" : `${s.meanTemp.toFixed(1)} °C`} />
@@ -304,6 +304,7 @@ export default function Page() {
           <li>Slope and low spots: AWS Terrain Tiles elevation data (NASA SRTM where available, other elevation models elsewhere), about 30 m detail.</li>
           <li>Farm and soil details: entered by the user, not verified.</li>
           <li>Crop parameters: prototype assumptions made by the project team.</li>
+          <li>Unusual months: Isolation Forest (unsupervised ML) on 30 years of NASA POWER data at the pin. It does not detect crop damage.</li>
           <li>Map tiles: OpenStreetMap contributors.</li>
         </ul>
       </Section>
@@ -313,7 +314,9 @@ export default function Page() {
           <li>{ENGINE_NOTE}</li>
           <li>{PARAMETERS_NOTE}</li>
           <li>Climate values are gridded estimates and not field measurements.</li>
-          <li>Climate suitability compares annual values with assumed ranges, so it is only a rough guide.</li>
+          <li>Climate fit is half annual temperature and rain against assumed crop ranges, half how often frost, heat and drought hit the crop in its growing months.</li>
+          <li>&quot;Best balance found&quot; comes from searching every allowed rotation with the same rules (Optimization). It is not a separate prediction.</li>
+          <li>Sowing and harvest months are typical mid-latitude dates. In mild-winter or tropical places they can be months off; the results page compares them with satellite plant cover.</li>
           <li>Season calendars use typical sowing and harvest months, not your own dates. Soil wetness comes from a model, not a probe in your field.</li>
           <li>Scores show relative fit under these rules. They do not predict yield, profit or disease risk.</li>
           <li>This report supports a conversation with a local agronomist and does not replace professional advice.</li>

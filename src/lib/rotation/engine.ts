@@ -422,6 +422,9 @@ const PLAIN_LOSS: Record<CriterionId, string> = {
 const seqText = (r: StrategyResult) =>
   r.sequence.map((c) => CROP_PARAMS[c].label).join(" → ");
 
+/** Below this, the recommendation warns that the crop list may not fit the place. */
+export const POOR_FIT = 50;
+
 /** Optional context that informs the advice but never changes scores. */
 export type RecommendationContext = {
   /** Recent months flagged as unusual by the anomaly detector (ML, unsupervised). */
@@ -479,6 +482,15 @@ export function buildRecommendation(
           .map((d) => `${PLAIN_LOSS[d.c.id]} (${d.before} → ${d.c.score}).`);
 
   const cautions: string[] = [];
+  // Wagro's crop list is built for mid-latitude, winter-rain or continental
+  // farming. When even the best option scores low, the list itself may not
+  // fit the place (found in testing for the Sahel).
+  if (best.overall < POOR_FIT)
+    cautions.push(
+      `Even the best option scores only ${best.overall}. The crops Wagro knows (${Object.values(CROP_PARAMS)
+        .map((p) => p.label.toLowerCase())
+        .join(", ")}) may not suit your area well, and local crops are not in the list. Ask a local adviser which crops fit.`,
+    );
   if (second && best.overall - second.overall < 5)
     cautions.push(
       `${second.name} is almost as good (${second.overall}). Choose between them by price, market and machinery.`,

@@ -1,6 +1,6 @@
 # WAGRO — Machine learning and optimization
 
-Status on 2026-11-15: **Phases 1–6 done.** The first ML component (unusual-month
+Status on 2026-11-15: **All 7 phases done.** The first ML component (unusual-month
 detection, unsupervised) is built and evaluated on synthetic tests, but **not
 yet shown in the app** (Phase 6). No supervised model is trained. The app
 still runs the rule-based engine and the existing statistics.
@@ -10,6 +10,7 @@ still runs the rule-based engine and the existing statistics.
 | [dataset-audit.md](dataset-audit.md) | Every candidate dataset, verified access, coverage and role |
 | [architecture-decision.md](architecture-decision.md) | Where ML runs and why (TypeScript in-app; offline Python only for trained models) |
 | [model-cards/](model-cards/) | One card per model or method, with status |
+| [evaluation.md](evaluation.md) | Generated results (`npm run evaluate`) |
 
 | Component | Method label | Status |
 |---|---|---|
@@ -39,6 +40,24 @@ still runs the rule-based engine and the existing statistics.
 - "Unusual months" card: recent and strongest flags from the Isolation Forest, plus single extreme values the model did not flag (labelled Statistics), with a one-line limitation.
 - "Plant cover" adds season timing (green-up or "green through winter", peak, fade) and whether it fits the crop calendar.
 - The How page lists the methods with badges and the status of each model, including the untrained suitability model.
+
+## Phase 7 manual QA (2026-11-15, dev server)
+
+| Check | Result |
+|---|---|
+| Southern hemisphere: Swartland, South Africa (−33.4, 18.7) | Runs without errors; frost "rare", heat and dry months plausible. **Finding:** satellite plant cover peaks in Aug, but the shifted calendar assumes wheat peaks in Nov; the app shows the mismatch note as designed. Calendars for mild winters need local values. |
+| Hot, frost-free: Sahel, Niger (13.5, 2.1) | Runs without errors; 197 hot days/year, no frost. **Finding:** the 9-crop list does not fit (best score 44, "best balance" barley → vetch → safflower). Added a warning when the best option scores below 50. |
+| Phone width 375 px: results and How pages | No horizontal overflow |
+| Report with five options | Table and chart render; method labels shown; outdated limitation text fixed |
+| Print / PDF | **Not tested** (only that print CSS is present) |
+
+## What is still open
+
+- Supervised crop suitability / yield model: blocked until a TÜİK district export is verified (dataset-audit.md §7).
+- Climate-aware crop calendars (mild winters, tropics) and crops for other regions.
+- Showing SoilGrids next to the farmer's soil input (route built, not displayed).
+- Reading GIBS latest dates at run time instead of the fixed values in `gibs.ts`.
+- End-to-end print/PDF check of the report.
 
 Rules for this work: never fabricate training data, never call a rule-based
 score an ML prediction, and keep the rule-based engine as the working fallback.

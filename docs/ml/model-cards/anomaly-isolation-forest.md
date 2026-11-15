@@ -50,6 +50,11 @@ None (unsupervised).
 
 ## Validation and metrics (all on 2026-11-15)
 
+The full, regenerable numbers are in [../evaluation.md](../evaluation.md)
+(`npm run evaluate`). The table below is from the unit tests; the evaluation
+script uses different random seeds, so counts differ slightly (for example
+49/50 instead of 50/50 for strong anomalies).
+
 There are **no labels**, so accuracy cannot be measured. These tests check
 that the method behaves as intended. Synthetic weather is clearly marked as
 synthetic in the code and is never used as training data for the app.

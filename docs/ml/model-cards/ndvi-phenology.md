@@ -28,6 +28,12 @@ the previous year and the calendar-year window cannot see when. The method then
 reports "green through winter" instead of a green-up month. This was found on
 the real series, where an earlier version said "greens up in January".
 
+## Southern hemisphere finding (2026-11-15)
+At Swartland, South Africa (−33.4, 18.7) the satellite season peaked in
+August, while the six-month-shifted wheat calendar assumes November. The check
+reported the mismatch, which is the intended behaviour; the calendar itself
+needs local values for mild-winter climates.
+
 ## Limitations
 Monthly steps are coarse (± one month). The footprint mixes neighbouring fields.
 Snow and cloud lower winter values.
