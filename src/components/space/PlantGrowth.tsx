@@ -1,17 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { MONTH_LABELS } from "@/lib/nasa/indicators";
-import { loadNdviSeries, seasonSummary, type NdviPoint } from "@/lib/features/ndvi";
-
-const MONTHS = 36;
-
-type Point = NdviPoint;
-type Result = { key: string; points?: Point[]; error?: string };
-
-// Survives page switches, so the 36 tiles are fetched once per field.
-const cache = new Map<string, Point[]>();
+import { seasonSummary } from "@/lib/features/ndvi";
+import { useNdvi } from "@/lib/features/use-ndvi";
 
 function monthList(ms: number[]): string {
   return ms.map((m) => MONTH_LABELS[m - 1]).join(", ");
@@ -19,26 +11,9 @@ function monthList(ms: number[]): string {
 
 /** What the satellite saw on and around the field over the last 3 years. */
 export default function PlantGrowth({ lat, lng }: { lat: number; lng: number }) {
-  const key = `${lat}|${lng}`;
-  const [result, setResult] = useState<Result | null>(null);
-
-  useEffect(() => {
-    if (cache.has(key)) return;
-    const controller = new AbortController();
-    loadNdviSeries(lat, lng, MONTHS, controller.signal)
-      .then((points) => {
-        cache.set(key, points);
-        setResult({ key, points });
-      })
-      .catch((e: unknown) => {
-        if (e instanceof DOMException && e.name === "AbortError") return;
-        setResult({ key, error: "Satellite data could not be loaded." });
-      });
-    return () => controller.abort();
-  }, [key, lat, lng]);
-
-  const points = cache.get(key) ?? (result?.key === key ? result.points : undefined);
-  const error = result?.key === key ? result.error : undefined;
+  const ndvi = useNdvi(lat, lng);
+  const points = ndvi.points ?? undefined;
+  const error = ndvi.status === "error" ? "Satellite data could not be loaded." : undefined;
 
   const { peakMonth: peak, lowMonths: bare, missing } = seasonSummary(points ?? []);
 

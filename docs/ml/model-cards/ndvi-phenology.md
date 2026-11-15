@@ -2,9 +2,10 @@
 
 | Field | Value |
 |---|---|
-| Status | **Not built** (planned for Phase 5) |
+| Status | **Built and tested** (2026-11-15). Used for a calendar check in the recommendation; its own display comes in Phase 6. |
 | Method label shown in the app | Statistics |
-| Code | `src/lib/features/phenology.ts` (to be created) |
+| Code | `src/lib/features/phenology.ts`, `src/lib/features/use-ndvi.ts` |
+| Tests | `src/lib/features/phenology.test.ts` |
 
 ## Purpose
 Describe the seasonal green-up, peak, decline and low-cover months of the land
@@ -25,6 +26,13 @@ TIMESAT). Low-cover months are those below an NDVI of 0.2.
 Monthly steps are coarse (± one month). The footprint mixes neighbouring fields.
 Snow and cloud lower winter values.
 
-## Validation (planned)
-Check against the crop calendar for known single-crop areas; report agreement
-in months. No accuracy claim without such a check.
+## Use in the app
+`checkCalendar` compares the typical satellite peak with the month the calendar
+assumes for the crop in the field now (about two months before harvest). If
+they differ by more than one month, the recommendation adds a note asking the
+farmer to check sowing and harvest months. Scores are not changed.
+
+## Validation
+- Synthetic seasonal curves: peak, green-up and decline found as defined; years with < 10 months or a range < 0.08 are skipped.
+- Real series at lat 39, lon 33 (decoded from GIBS on 2026-11-15, fixture in `src/lib/features/__fixtures__/`): seasons found for 2024, 2025 and 2026; typical peak in spring, consistent with the winter-wheat calendar; the 2025 season's range was less than half of 2024's.
+- No accuracy claim: there is no ground truth for season timing at this point.

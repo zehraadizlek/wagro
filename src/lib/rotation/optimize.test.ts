@@ -5,7 +5,7 @@ import type { FarmProfile } from "@/lib/schemas/farm";
 import { syntheticDaily } from "@/lib/testing/synthetic";
 import { CROP_PARAMS } from "./crops";
 import { evaluateStrategies } from "./engine";
-import { cycleKey, dominates, optimizeRotation, paretoFront, sequences } from "./optimize";
+import { cycleKey, dominates, familiesAlternate, optimizeRotation, paretoFront, sequences } from "./optimize";
 import { scoringContext, type CriterionResult } from "./score";
 
 const farm: FarmProfile = {
@@ -69,7 +69,7 @@ describe("optimizeRotation", () => {
 
   it("labels itself as optimization and reports the search size", () => {
     expect(result.method).toBe("optimization");
-    expect(result.evaluated).toBeGreaterThan(300);
+    expect(result.evaluated).toBeGreaterThan(50);
     expect(result.paretoSize).toBeGreaterThan(0);
     expect(result.options.length).toBeGreaterThanOrEqual(1);
     expect(result.options.length).toBeLessThanOrEqual(3);
@@ -83,6 +83,18 @@ describe("optimizeRotation", () => {
   it("returns clearly different alternatives", () => {
     const sets = result.options.map((o) => `${[...new Set(o.sequence)].sort().join()}|${o.coverCrops}`);
     expect(new Set(sets).size).toBe(sets.length);
+  });
+
+  it("never puts two crops of the same family next to each other", () => {
+    for (const o of result.options) {
+      for (let i = 0; i < o.sequence.length; i++) {
+        const a = CROP_PARAMS[o.sequence[i]].family;
+        const b = CROP_PARAMS[o.sequence[(i + 1) % o.sequence.length]].family;
+        expect(a).not.toBe(b);
+      }
+    }
+    expect(familiesAlternate(["barley", "vetch", "lentil"])).toBe(false);
+    expect(familiesAlternate(["wheat", "lentil", "sunflower"])).toBe(true);
   });
 
   it("never starts with the crop in the field now", () => {

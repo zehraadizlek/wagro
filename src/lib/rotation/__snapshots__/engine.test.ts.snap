@@ -82,5 +82,25 @@ exports[`evaluateStrategies > matches the recorded output (guards the Phase 4 re
       "barley",
     ],
   },
+  {
+    "coverCrops": true,
+    "criteria": {
+      "climate": 80,
+      "diversity": 100,
+      "erosion": 83,
+      "income": 50,
+      "nitrogen": 70,
+      "soilFit": 99,
+      "soilHealth": 75,
+      "water": 53,
+    },
+    "id": "optimized",
+    "overall": 73,
+    "sequence": [
+      "barley",
+      "vetch",
+      "safflower",
+    ],
+  },
 ]
 `;

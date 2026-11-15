@@ -98,6 +98,19 @@ export function paretoFront<T extends { criteria: CriterionResult[] }>(items: T[
   return front;
 }
 
+/**
+ * Agronomic rule applied to the search: two crops of the same family must not
+ * follow each other (including from the last season back to the first), as
+ * they share pests and diseases. The scoring criteria only penalize this
+ * mildly, so without this rule the search would exploit that gap.
+ */
+export function familiesAlternate(seq: Crop[]): boolean {
+  for (let i = 0; i < seq.length; i++) {
+    if (CROP_PARAMS[seq[i]].family === CROP_PARAMS[seq[(i + 1) % seq.length]].family) return false;
+  }
+  return true;
+}
+
 /** Clearly different: another set of crops, or the same crops with a different cover choice. */
 function differs(a: Candidate, b: Candidate): boolean {
   const sa = new Set(a.sequence);
@@ -121,6 +134,7 @@ export function optimizeRotation(
   for (const seq of sequences(pool.crops, seasons)) {
     // The next season should not repeat the crop that is in the field now.
     if (seq[0] === farm.currentCrop) continue;
+    if (!familiesAlternate(seq)) continue;
     for (const cover of coverChoices) {
       const key = cycleKey(seq, cover);
       if (seen.has(key)) continue;

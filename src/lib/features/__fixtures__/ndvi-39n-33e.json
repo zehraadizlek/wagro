@@ -1,0 +1,18 @@
+{
+  "note": "Real MODIS Terra NDVI monthly values at lat 39, lon 33, decoded from NASA GIBS tiles with the published colormap on 2026-11-15 (3x3 pixel mean, Level 7). 2025-04 is missing in GIBS.",
+  "points": [
+    {"month": "2023-11", "ndvi": 0.24}, {"month": "2023-12", "ndvi": 0.32},
+    {"month": "2024-01", "ndvi": 0.38}, {"month": "2024-02", "ndvi": 0.35}, {"month": "2024-03", "ndvi": 0.39},
+    {"month": "2024-04", "ndvi": 0.5}, {"month": "2024-05", "ndvi": 0.4}, {"month": "2024-06", "ndvi": 0.44},
+    {"month": "2024-07", "ndvi": 0.17}, {"month": "2024-08", "ndvi": 0.15}, {"month": "2024-09", "ndvi": 0.15},
+    {"month": "2024-10", "ndvi": 0.14}, {"month": "2024-11", "ndvi": 0.14}, {"month": "2024-12", "ndvi": 0.16},
+    {"month": "2025-01", "ndvi": 0.17}, {"month": "2025-02", "ndvi": 0.16}, {"month": "2025-03", "ndvi": 0.17},
+    {"month": "2025-04", "ndvi": null}, {"month": "2025-05", "ndvi": 0.21}, {"month": "2025-06", "ndvi": 0.17},
+    {"month": "2025-07", "ndvi": 0.14}, {"month": "2025-08", "ndvi": 0.12}, {"month": "2025-09", "ndvi": 0.12},
+    {"month": "2025-10", "ndvi": 0.12}, {"month": "2025-11", "ndvi": 0.12}, {"month": "2025-12", "ndvi": 0.13},
+    {"month": "2026-01", "ndvi": 0.16}, {"month": "2026-02", "ndvi": 0.17}, {"month": "2026-03", "ndvi": 0.21},
+    {"month": "2026-04", "ndvi": 0.31}, {"month": "2026-05", "ndvi": 0.43}, {"month": "2026-06", "ndvi": 0.5},
+    {"month": "2026-07", "ndvi": 0.31}, {"month": "2026-08", "ndvi": 0.17}, {"month": "2026-09", "ndvi": 0.15},
+    {"month": "2026-10", "ndvi": 0.19}
+  ]
+}

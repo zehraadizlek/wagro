@@ -2,6 +2,7 @@ import type { AgroIndicators } from "@/lib/nasa/indicators";
 import type { Crop, FarmProfile } from "@/lib/schemas/farm";
 import type { SeasonPlan } from "./calendar";
 import { CROP_PARAMS, type CropFamily } from "./crops";
+import { cycleKey, optimizeRotation } from "./optimize";
 import { allowedCrops, type Pool } from "./pool";
 import {
   cropClimateFit,
@@ -26,12 +27,21 @@ export {
 export const ENGINE_NOTE =
   "Scores come from transparent rules and relative crop parameters. This is not a trained machine-learning model, and the parameters are prototype assumptions that need agronomic validation.";
 
-export type StrategyId = "current" | "legume" | "diversified" | "cover";
+export type StrategyId = "current" | "legume" | "diversified" | "cover" | "optimized";
+type BuiltStrategyId = Exclude<StrategyId, "optimized">;
+
+/** How a strategy was produced. Never "ML": these come from rules or a search over rule scores. */
+export type StrategyMethod = "rule-based" | "optimization";
+
+/** What a strategy's scores draw on. */
+export type DataSource = "nasa-power" | "elevation" | "farmer" | "crop-estimates";
 
 export type StrategyResult = {
   id: StrategyId;
   name: string;
   description: string;
+  method: StrategyMethod;
+  sources: DataSource[];
   sequence: Crop[];
   /** Whether a cover crop fills the long empty spells. */
   coverCrops: boolean;
@@ -95,7 +105,7 @@ function buildSequences(
   farm: FarmProfile,
   climate: ClimateInput,
   pool: Crop[],
-): Record<StrategyId, Crop[]> {
+): Record<BuiltStrategyId, Crop[]> {
   const cur = farm.currentCrop;
   const fit = (c: Crop) => cropClimateFit(c, climate, farm.irrigation) ?? 0;
   // Water-saving score: climate fit minus a penalty for thirsty crops.
@@ -158,9 +168,20 @@ const META: Record<StrategyId, { name: string; description: string }> = {
     description:
       "Low-water crops from different families, with a cover crop in the long empty months.",
   },
+  optimized: {
+    name: "Best balance found",
+    description:
+      "Found by scoring every rotation you can grow with the same rules and keeping the best balance for your priorities.",
+  },
 };
 
-function whyText(id: StrategyId, seq: Crop[], pool: Pool, coverCrops: boolean): string {
+function whyText(
+  id: StrategyId,
+  seq: Crop[],
+  pool: Pool,
+  coverCrops: boolean,
+  searched: number,
+): string {
   const fromList = pool.limited && !pool.relaxed
     ? " Only crops you can sell and sow with your machinery were considered."
     : "";
@@ -180,6 +201,10 @@ function whyText(id: StrategyId, seq: Crop[], pool: Pool, coverCrops: boolean): 
     case "cover":
       return `Crops that need less water${
         coverCrops ? ", and a cover crop that protects and feeds the soil in the long empty months" : ""
+      }.${fromList}`;
+    case "optimized":
+      return `We scored all ${searched} rotations you can grow with the same rules. This one gave the best balance for your priorities${
+        coverCrops ? ", with a cover crop in the long empty months" : ""
       }.${fromList}`;
   }
 }
@@ -229,8 +254,8 @@ function knowledgeGaps(
   if (!hasTerrain)
     out.push("No slope data, so erosion risk on steep fields may be underestimated.");
   else out.push("Slope comes from 30 m elevation data; small banks and gullies are not seen.");
-  if (id === "cover")
-    out.push("How much water the cover crop uses depends on each year's rain.");
+  if (id === "cover" || id === "optimized")
+    out.push("How much water a cover crop uses depends on each year's rain.");
   out.push("Yields, prices and local pest pressure are not included.");
   return out.slice(0, 3);
 }
@@ -242,6 +267,7 @@ export function evaluateStrategies(
   climate: ClimateInput,
   indicators: AgroIndicators | null = null,
   terrain: TerrainInput = null,
+  opts: { optimize?: boolean } = {},
 ): StrategyResult[] {
   const ctx = scoringContext(farm, climate, indicators, terrain);
   const { hasClimate, hasMonthly, hasSoil } = ctx;
@@ -260,18 +286,36 @@ export function evaluateStrategies(
     "Crop values for water, nitrogen, soil and calendar (first estimates).",
   ].filter((e): e is string => e !== null);
 
+  const sources: DataSource[] = [
+    ...(hasClimate || hasMonthly ? (["nasa-power"] as const) : []),
+    ...(terrain ? (["elevation"] as const) : []),
+    "farmer",
+    "crop-estimates",
+  ];
+
+  // Search every allowed rotation with the same rules (labelled "optimization").
+  const search = opts.optimize === false ? null : optimizeRotation(farm, ctx, { maxResults: 1 });
+  const top = search?.options[0] ?? null;
+  const topKey = top ? cycleKey(top.sequence, top.coverCrops) : null;
+
   // An option identical to an earlier one adds nothing, so it is left out.
   const seen = new Set<string>();
-  const ids = (["current", "legume", "diversified", "cover"] as StrategyId[]).filter((id) => {
+  const ids = (["current", "legume", "diversified", "cover"] as BuiltStrategyId[]).filter((id) => {
     const key = `${seqs[id].join(">")}|${id === "cover" && farm.coverCropsOk}`;
     if (id !== "current" && seen.has(key)) return false;
     seen.add(key);
     return true;
   });
+  const built = ids.map((id) => ({
+    id: id as StrategyId,
+    seq: seqs[id],
+    coverCrops: id === "cover" && farm.coverCropsOk,
+  }));
+  // Add the search result only when it is a rotation not already shown.
+  const matched = built.find((b) => cycleKey(b.seq, b.coverCrops) === topKey);
+  if (top && !matched) built.push({ id: "optimized", seq: top.sequence, coverCrops: top.coverCrops });
 
-  return ids.map((id) => {
-    const seq = seqs[id];
-    const coverCrops = id === "cover" && farm.coverCropsOk;
+  return built.map(({ id, seq, coverCrops }) => {
     const { plan, criteria, overall } = scoreSequence(seq, coverCrops, ctx);
 
     const scored = criteria.filter((c) => c.score !== null);
@@ -311,6 +355,8 @@ export function evaluateStrategies(
       id,
       name: META[id].name,
       description: META[id].description,
+      method: id === "optimized" ? "optimization" : "rule-based",
+      sources,
       sequence: seq,
       coverCrops,
       overall,
@@ -319,7 +365,13 @@ export function evaluateStrategies(
       risks,
       summary: `${seq.map(name).join(" → ")} scores ${overall} out of 100 under these rules.`,
       confidence: { level: hasClimate ? "medium" : "low", reasons },
-      why: whyText(id, seq, pool, coverCrops),
+      why:
+        whyText(id, seq, pool, coverCrops, search?.evaluated ?? 0) +
+        (matched?.id === id && id !== "current"
+          ? ` A search of all ${search!.evaluated} possible rotations found no better balance.`
+          : matched?.id === id
+            ? ` A search of all ${search!.evaluated} possible rotations found no better balance than what you grow now.`
+            : ""),
       evidence,
       benefits: benefits.length ? benefits : ["No clear strength under these rules."],
       gaps: knowledgeGaps(id, hasClimate, hasMonthly, hasSoil, !!terrain, pool),
@@ -370,9 +422,20 @@ const PLAIN_LOSS: Record<CriterionId, string> = {
 const seqText = (r: StrategyResult) =>
   r.sequence.map((c) => CROP_PARAMS[c].label).join(" → ");
 
+/** Optional context that informs the advice but never changes scores. */
+export type RecommendationContext = {
+  /** Recent months flagged as unusual by the anomaly detector (ML, unsupervised). */
+  unusualMonths?: { ym: string; summary: string }[];
+  /** Satellite season timing compared with the crop calendar (Statistics). */
+  calendarCheck?: { crop: Crop; expectedPeak: number; observedPeak: number; agrees: boolean };
+};
+
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 export function buildRecommendation(
   farm: FarmProfile,
   results: StrategyResult[],
+  context: RecommendationContext = {},
 ): Recommendation {
   const ranked = [...results].sort((a, b) => b.overall - a.overall);
   const best = ranked[0];
@@ -422,6 +485,22 @@ export function buildRecommendation(
     );
   if (best.confidence.level === "low")
     cautions.push("Weather data was missing, so treat this result with extra care.");
+  if (best.method === "optimization")
+    cautions.push(
+      "This option comes from a search over the same rules, not from a separate prediction. Its strengths and limits are the same as the rules'.",
+    );
+  const check = context.calendarCheck;
+  if (check && !check.agrees)
+    cautions.push(
+      `Satellite plant cover around your field usually peaks in ${MONTH_NAMES[check.observedPeak - 1]}, but our calendar assumes ${CROP_PARAMS[check.crop].label.toLowerCase()} peaks in ${MONTH_NAMES[check.expectedPeak - 1]}. Check the sowing and harvest months against your own.`,
+    );
+  const unusual = context.unusualMonths ?? [];
+  if (unusual.length) {
+    const latest = unusual[unusual.length - 1];
+    cautions.push(
+      `${unusual.length} of the last 24 months were unusual for your area (latest ${latest.ym}: ${latest.summary.replace(/\.$/, "").toLowerCase()}). Check whether they affected your fields; the scores above do not include them.`,
+    );
+  }
   cautions.push(
     "These are first estimates. A higher score is not a promise of more yield or profit.",
   );

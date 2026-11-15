@@ -59,7 +59,7 @@ export const MODEL_CARDS: ModelCard[] = [
     purpose: "Searches all allowed crop sequences for the best balance of the eight criteria.",
     data: "The rule-based criteria; no training data.",
     evaluation:
-      "Exact Pareto front checked against brute force; constraints never violated in tests; 3 seasons ≈ 9 ms, 4 seasons ≈ 75 ms (Node).",
+      "Exact Pareto front checked against brute force; constraints never violated in tests; 3 seasons ≈ 2 ms, 4 seasons ≈ 18 ms (Node). Same-family crops never follow each other.",
     limitations: ["Only as good as the rule-based criteria and crop values."],
     doc: "docs/ml/model-cards/rotation-optimizer.md",
   },
@@ -67,10 +67,11 @@ export const MODEL_CARDS: ModelCard[] = [
     id: "phenology",
     name: "Plant-cover seasons (NDVI phenology)",
     method: "statistics",
-    status: "not-built",
+    status: "built",
     purpose: "Describes green-up, peak and low-cover months around the field. Cannot identify crops.",
     data: "MODIS NDVI monthly from NASA GIBS (about 1 km).",
-    evaluation: null,
+    evaluation:
+      "Synthetic curves give the defined months; on a real 3-year series the typical spring peak matched the winter-wheat calendar. No ground truth for timing.",
     limitations: ["Monthly steps; neighbouring fields mix in; snow lowers winter values."],
     doc: "docs/ml/model-cards/ndvi-phenology.md",
   },

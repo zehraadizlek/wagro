@@ -1,6 +1,6 @@
 # WAGRO — Machine learning and optimization
 
-Status on 2026-11-15: **Phases 1–4 done.** The first ML component (unusual-month
+Status on 2026-11-15: **Phases 1–5 done.** The first ML component (unusual-month
 detection, unsupervised) is built and evaluated on synthetic tests, but **not
 yet shown in the app** (Phase 6). No supervised model is trained. The app
 still runs the rule-based engine and the existing statistics.
@@ -13,9 +13,9 @@ still runs the rule-based engine and the existing statistics.
 
 | Component | Method label | Status |
 |---|---|---|
-| Environmental anomaly detection | ML (unsupervised) | **Built and evaluated** (synthetic tests); UI in Phase 6 |
-| Rotation optimization | Optimization | **Built and tested** (exhaustive Pareto search); UI in Phase 5–6 |
-| NDVI phenology | Statistics | Not built — Phase 5 |
+| Environmental anomaly detection | ML (unsupervised) | **Built and evaluated**; recent flags appear as an information-only note in the recommendation; full card in Phase 6 |
+| Rotation optimization | Optimization | **Built and tested**; its best option is now shown as "Best balance found" |
+| NDVI phenology | Statistics | **Built and tested**; drives a calendar check in the recommendation |
 | Crop suitability / yield anomaly | ML (trained) | **Blocked** — needs a verified TÜİK district export |
 
 ## Phase 2 building blocks (built and unit-tested)
@@ -27,6 +27,12 @@ still runs the rule-based engine and the existing statistics.
 | NDVI series and statistics | `src/lib/features/ndvi.ts` | Moved out of `PlantGrowth.tsx`; adds NDVI anomalies |
 | SoilGrids estimate | `src/lib/soil/soilgrids.ts`, `src/app/api/soilgrids/route.ts` | 0–30 cm depth-weighted mean and 90 % interval; verified live (≈ 9–22 s upstream, cached after) |
 | Tests | `src/**/*.test.ts` (`npm test`) | Includes regression tests and an engine snapshot for the existing logic |
+
+## Phase 5 integration (what changed in the app)
+- Every strategy now carries `method` ("rule-based" or "optimization") and `sources`.
+- The optimizer's best rotation is added as a fifth option, "Best balance found", when it differs from the hand-built four; otherwise the matching option says the search found nothing better.
+- The recommendation can add two information-only notes: recent unusual months (ML, unsupervised) and a satellite-versus-calendar timing mismatch (Statistics). Neither changes any score.
+- `predictSuitability()` exists and always returns "not-trained".
 
 Rules for this work: never fabricate training data, never call a rule-based
 score an ML prediction, and keep the rule-based engine as the working fallback.

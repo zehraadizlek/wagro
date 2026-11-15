@@ -106,6 +106,33 @@ describe("evaluateStrategies", () => {
   });
 });
 
+describe("method labels and the optimizer option", () => {
+  const results = evaluateStrategies(farm, summary, indicators, { meanSlopePct: 4 });
+
+  it("labels hand-built strategies rule-based and the search result optimization", () => {
+    for (const r of results) {
+      expect(r.method).toBe(r.id === "optimized" ? "optimization" : "rule-based");
+      expect(r.sources).toContain("farmer");
+      expect(r.sources).toContain("crop-estimates");
+    }
+  });
+
+  it("adds the search result when it is a new rotation, and explains it", () => {
+    const opt = results.find((r) => r.id === "optimized");
+    expect(opt).toBeDefined();
+    expect(opt!.why).toMatch(/We scored all \d+ rotations/);
+  });
+
+  it("can switch the search off", () => {
+    const plain = evaluateStrategies(farm, summary, indicators, null, { optimize: false });
+    expect(plain.some((r) => r.id === "optimized")).toBe(false);
+  });
+
+  it("never claims ML for any strategy", () => {
+    expect(results.every((r) => r.method !== ("ml-trained" as string))).toBe(true);
+  });
+});
+
 describe("buildRecommendation", () => {
   it("names the top option and compares it with the current rotation", () => {
     const results = evaluateStrategies(farm, summary, indicators);
@@ -114,5 +141,18 @@ describe("buildRecommendation", () => {
     expect(rec.bestId).toBe(best.id);
     expect(rec.reasons.length).toBeGreaterThan(0);
     expect(rec.discuss.length).toBe(3);
+  });
+
+  it("adds an information-only note about recent unusual months", () => {
+    const results = evaluateStrategies(farm, summary, indicators);
+    const without = buildRecommendation(farm, results);
+    const withNote = buildRecommendation(farm, results, {
+      unusualMonths: [{ ym: "2026-06", summary: "Far more hot days than usual." }],
+    });
+    expect(withNote.cautions.length).toBe(without.cautions.length + 1);
+    expect(withNote.cautions.join(" ")).toMatch(/2026-06: far more hot days than usual\)/);
+    expect(withNote.cautions.join(" ")).toMatch(/do not include them/);
+    // Scores are untouched.
+    expect(withNote.bestId).toBe(without.bestId);
   });
 });

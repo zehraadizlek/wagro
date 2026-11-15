@@ -23,6 +23,9 @@ import {
 } from "@/lib/nasa/scenario";
 import { useClimate } from "@/lib/nasa/use-climate";
 import { CRITERION_MEANING, buildRecommendation, evaluateStrategies } from "@/lib/rotation/engine";
+import { checkCalendar, phenology } from "@/lib/features/phenology";
+import { useNdvi } from "@/lib/features/use-ndvi";
+import { useAnomalies } from "@/lib/ml/use-anomalies";
 import { useFarm } from "@/lib/storage/use-farm";
 import { useTerrain } from "@/lib/terrain/use-terrain";
 
@@ -30,6 +33,15 @@ export default function Page() {
   const { farm, ready } = useFarm();
   const climate = useClimate(farm);
   const field = useTerrain(farm);
+  const anomalies = useAnomalies(farm);
+  const ndvi = useNdvi(farm?.latitude ?? null, farm?.longitude ?? null);
+  const calendarCheck = useMemo(
+    () =>
+      farm && ndvi.points
+        ? checkCalendar(phenology(ndvi.points), farm.currentCrop, farm.latitude) ?? undefined
+        : undefined,
+    [farm, ndvi.points],
+  );
   const terrainInput = useMemo(
     () => (field.terrain ? { meanSlopePct: field.terrain.meanSlopePct } : null),
     [field.terrain],
@@ -60,8 +72,14 @@ export default function Page() {
   const indicators = shiftedClimate?.indicators ?? climate.indicators;
 
   const rec = useMemo(
-    () => (farm && results ? buildRecommendation(farm, results) : null),
-    [farm, results],
+    () =>
+      farm && results
+        ? buildRecommendation(farm, results, {
+            unusualMonths: anomalies.recent.map((m) => ({ ym: m.ym, summary: m.summary })),
+            calendarCheck,
+          })
+        : null,
+    [farm, results, anomalies.recent, calendarCheck],
   );
 
   const bestId = results

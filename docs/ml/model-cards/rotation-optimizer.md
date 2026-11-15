@@ -17,10 +17,12 @@ make the criteria more accurate.
 9 crops, sequences with repetition. Rotations that are the same cycle started
 from a different season are counted once. With the cover-crop option:
 
-| Seasons | Raw sequences | Scored after limits and de-duplication (test farm) | Pareto front | Time (Node) |
+| Seasons | Raw sequences | Scored after rules and de-duplication (test farm) | Pareto front | Time (Node) |
 |---|---|---|---|---|
-| 3 | 9³ × 2 = 1,458 | 496 | 128 | ≈ 9 ms |
-| 4 | 9⁴ × 2 = 13,122 | 3,328 | 371 | ≈ 75 ms |
+| 3 | 9³ × 2 = 1,458 | 96 | 36 | ≈ 2 ms |
+| 4 | 9⁴ × 2 = 13,122 | 702 | 162 | ≈ 18 ms |
+
+(Before the family rule below was added, 3 seasons scored 496 candidates in ≈ 9 ms and 4 seasons 3,328 in ≈ 75 ms.)
 
 Exhaustive search finds the **exact** Pareto front, which a genetic algorithm
 would only approximate, so no genetic algorithm is used. A Web Worker is not
@@ -34,6 +36,7 @@ disease break, erosion, climate fit, soil fit, income and feed.
 - Market list and row-planter availability (same rules as the strategy builder; relaxed with a notice when fewer than two crops remain).
 - Cover crops only if the farmer accepts them.
 - The first season does not repeat the crop that is in the field now.
+- **Two crops of the same family never follow each other** (also from the last season back to the first), because they share pests and diseases. This rule was added after the first search run returned barley → vetch → lentil: the criteria penalize back-to-back legumes only slightly, and the search exploited that gap. With the rule, the test farm's best option became barley → vetch → safflower.
 - Irrigation, soil and slope act through the criteria.
 
 ## Selection
