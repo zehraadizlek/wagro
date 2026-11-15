@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Built and tested** (2026-11-15). Shown as the "Best balance found" option with an Optimization badge. |
+| Status | **Built and tested** (2026-11-15). Shown as the "Best balance under Wagro's rules" option with an Optimization badge. |
 | Method label shown in the app | Optimization |
 | Code | `src/lib/rotation/optimize.ts`, scoring in `src/lib/rotation/score.ts`, crop limits in `src/lib/rotation/pool.ts` |
 | Tests | `src/lib/rotation/optimize.test.ts` |

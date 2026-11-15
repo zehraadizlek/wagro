@@ -49,7 +49,7 @@ export default function StrategyCards({
                 <span className="font-display text-3xl">{r.overall}</span>
                 <span className="text-sm text-muted">/100</span>
                 {r.id === bestId && (
-                  <div className="text-xs font-medium text-olive">Best match</div>
+                  <div className="text-xs font-medium text-olive">Highest score under Wagro&apos;s rules</div>
                 )}
               </div>
             </div>

@@ -303,7 +303,7 @@ export default function Page() {
           <li>Satellite maps and plant cover: NASA GIBS imagery of MODIS (vegetation index, land surface temperature), SMAP (root-zone soil moisture) and GRACE/GRACE-FO (water storage).</li>
           <li>Slope and low spots: AWS Terrain Tiles elevation data (NASA SRTM where available, other elevation models elsewhere), about 30 m detail.</li>
           <li>Farm and soil details: entered by the user, not verified.</li>
-          <li>Crop parameters: prototype assumptions made by the project team.</li>
+          <li>Crop parameters: prototype estimates made by the project team, not yet validated by an agronomist.</li>
           <li>Unusual months: Isolation Forest (unsupervised ML) on 30 years of NASA POWER data at the pin. It does not detect crop damage.</li>
           <li>Map tiles: OpenStreetMap contributors.</li>
         </ul>
@@ -315,7 +315,7 @@ export default function Page() {
           <li>{PARAMETERS_NOTE}</li>
           <li>Climate values are gridded estimates and not field measurements.</li>
           <li>Climate fit is half annual temperature and rain against assumed crop ranges, half how often frost, heat and drought hit the crop in its growing months.</li>
-          <li>&quot;Best balance found&quot; comes from searching every allowed rotation with the same rules (Optimization). It is not a separate prediction.</li>
+          <li>&quot;Best balance under Wagro&apos;s rules&quot; comes from searching every allowed rotation with the same rules (Optimization). It is not a separate prediction.</li>
           <li>Sowing and harvest months are typical mid-latitude dates. In mild-winter or tropical places they can be months off; the results page compares them with satellite plant cover.</li>
           <li>Season calendars use typical sowing and harvest months, not your own dates. Soil wetness comes from a model, not a probe in your field.</li>
           <li>Scores show relative fit under these rules. They do not predict yield, profit or disease risk.</li>

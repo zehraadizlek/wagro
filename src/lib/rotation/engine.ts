@@ -169,7 +169,7 @@ const META: Record<StrategyId, { name: string; description: string }> = {
       "Low-water crops from different families, with a cover crop in the long empty months.",
   },
   optimized: {
-    name: "Best balance found",
+    name: "Best balance under Wagro's rules",
     description:
       "Found by scoring every rotation you can grow with the same rules and keeping the best balance for your priorities.",
   },

@@ -36,7 +36,7 @@ const STATUS_TEXT = {
 
 const UNCERTAIN = [
   "Weather and satellite data describe an area, not your exact field. Coarser data (GRACE, SMAP) speaks for the region.",
-  "Crop values and calendars are first estimates. An agronomist should check them for your area.",
+  "Crop values and calendars are prototype estimates, not yet validated by an agronomist. An agronomist should check them for your area.",
   "Ten years is short. Trends and year groups are a guide, not proof.",
   "Scores compare options with each other. They do not predict yield or profit. Treat options within 5 points as equal.",
 ];
@@ -90,7 +90,7 @@ export default function Page() {
           <p className="text-muted">
             Each source has its own grid and time step. Wagro brings them to one
             place and one time step: values at your pin, daily weather summed
-            into a typical month, and satellite maps read at your field. Coarse
+            into a typical month, and satellite maps read at your pin. Coarse
             data describes your region; elevation describes your field.
           </p>
         </Section>

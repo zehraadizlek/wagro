@@ -127,7 +127,7 @@ export default function GrowingConditions({ ind }: { ind: AgroIndicators }) {
         <Card title="Water" level={waterLevel} big={waterBig} text={waterText} />
         <Card title="Frost" level={frostLevel} big={frostBig} text={frostText} />
         <Card title="Heat" level={heatLevel} big={`${hot} very hot days a year`} text={heatText} />
-        <Card title="Soil moisture now" level={soilLevel} big={soilBig} text={soilText} />
+        <Card title="Soil moisture now (area estimate)" level={soilLevel} big={soilBig} text={`${soilText} This is a model estimate for about 50 km around your pin, not a measurement in your field.`} />
       </div>
 
       <details className="group mt-6 rounded-2xl border border-line p-4">

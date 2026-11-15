@@ -33,7 +33,7 @@ export default function PlantGrowth({ lat, lng, crop }: { lat: number; lng: numb
   return (
     <section className="rounded-[28px] border border-line bg-paper p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-display text-3xl">Plant cover on your field</h2>
+        <h2 className="font-display text-3xl">Plant cover around your field</h2>
         <MethodBadge method="statistics" />
       </div>
       <p className="mt-1 text-sm text-muted">

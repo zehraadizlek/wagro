@@ -115,7 +115,9 @@ export default function LastTenYears({
       <p className="mt-3 text-xs text-muted">
         Trends use the Mann-Kendall test and Sen&apos;s slope. Years are grouped
         by rain with k-means clustering. With only {data.years} years, treat
-        both as a guide.
+        both as a guide. These are statistics; the best option in each group is
+        chosen by Wagro&apos;s rule-based scores and rotation search, not by the
+        statistics.
       </p>
     </section>
   );

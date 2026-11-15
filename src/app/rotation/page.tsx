@@ -92,7 +92,7 @@ export default function Page() {
       <PageHeader
         eyebrow={farm ? farm.name : "Results"}
         title="Your results"
-        description="Based on 10 years of NASA weather data for your field and your answers."
+        description="Based on 10 years of NASA weather data for the area around your field (about 50 km grid) and your answers."
       />
 
       {ready && !farm && (
@@ -106,7 +106,7 @@ export default function Page() {
 
       {farm && !results && (
         <div className="space-y-4">
-          <p className="text-sm text-muted">Loading NASA data for your field…</p>
+          <p className="text-sm text-muted">Loading NASA data for your area…</p>
           <div className="h-48 animate-pulse rounded-[28px] bg-sand" />
           <div className="h-48 animate-pulse rounded-[28px] bg-sand" />
         </div>

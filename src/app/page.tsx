@@ -6,7 +6,7 @@ import { useFarm } from "@/lib/storage/use-farm";
 
 const STEPS = [
   { n: "1", title: "Answer 4 short questions", text: "Where your field is, what you grow, your soil and what matters to you." },
-  { n: "2", title: "We read NASA data", text: "10 years of rain, frost, heat and soil moisture for your field." },
+  { n: "2", title: "We read NASA data", text: "10 years of rain, frost, heat and soil moisture for the area around your field (a grid of about 50 km), not field measurements." },
   { n: "3", title: "See your best options", text: "Which crop order fits, why, and what to check locally." },
 ];
 

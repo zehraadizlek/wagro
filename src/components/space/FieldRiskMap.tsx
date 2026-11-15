@@ -82,7 +82,8 @@ export default function FieldRiskMap({
       <h2 className="font-display text-3xl">Your field up close</h2>
       <p className="mt-1 text-sm text-muted">
         Where the land is steep or low, from elevation data. The dashed circle
-        is your field size around the pin.
+        is an area the size of your farm centred on the pin, not your actual
+        field boundary.
       </p>
 
       {status === "loading" && <div className="mt-4 h-80 animate-pulse rounded-2xl bg-sand" />}

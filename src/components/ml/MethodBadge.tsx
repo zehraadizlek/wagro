@@ -9,7 +9,7 @@ const DOT: Record<MethodLabel, string> = {
 };
 
 const TITLE: Record<MethodLabel, string> = {
-  "rule-based": "Simple, open rules and first-estimate crop values",
+  "rule-based": "Simple, open rules and prototype crop values (not agronomist-validated)",
   statistics: "Averages, trends and anomalies computed from the data",
   "ml-unsupervised": "A model that learned what is normal here from 30 years of NASA data, without labels",
   "ml-trained": "A model trained on labelled examples",

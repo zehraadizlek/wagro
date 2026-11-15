@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Built and tested** (2026-11-15). Shown in "Plant cover on your field" and used for a calendar check. |
+| Status | **Built and tested** (2026-11-15). Shown in "Plant cover around your field" and used for a calendar check. |
 | Method label shown in the app | Statistics |
 | Code | `src/lib/features/phenology.ts`, `src/lib/features/use-ndvi.ts` |
 | Tests | `src/lib/features/phenology.test.ts` |

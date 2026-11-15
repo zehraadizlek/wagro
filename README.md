@@ -29,7 +29,7 @@ Every result says how it was made. Nothing rule-based is called ML.
 | Rule-based | The eight scores (water, nitrogen, organic matter, pest break, erosion, climate fit, soil fit, income) and the hand-built options |
 | Statistics | Trends (Mann-Kendall, Sen's slope), year types (k-means), NDVI season timing, single extreme values |
 | ML (unsupervised) | Unusual-month detection (Isolation Forest), learned per location without labels |
-| Optimization | "Best balance found": exact Pareto search over every allowed rotation with the same rules |
+| Optimization | "Best balance under Wagro's rules": exact Pareto search over every allowed rotation with the same rules |
 
 **No supervised ML model is trained.** Crop suitability / yield prediction is
 blocked until verified training labels exist (see

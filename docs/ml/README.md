@@ -15,7 +15,7 @@ still runs the rule-based engine and the existing statistics.
 | Component | Method label | Status |
 |---|---|---|
 | Environmental anomaly detection | ML (unsupervised) | **Built and evaluated**; recent flags appear as an information-only note in the recommendation; full card in Phase 6 |
-| Rotation optimization | Optimization | **Built and tested**; its best option is now shown as "Best balance found" |
+| Rotation optimization | Optimization | **Built and tested**; its best option is now shown as "Best balance under Wagro's rules" |
 | NDVI phenology | Statistics | **Built and tested**; drives a calendar check in the recommendation |
 | Crop suitability / yield anomaly | ML (trained) | **Blocked** — needs a verified TÜİK district export |
 
@@ -31,7 +31,7 @@ still runs the rule-based engine and the existing statistics.
 
 ## Phase 5 integration (what changed in the app)
 - Every strategy now carries `method` ("rule-based" or "optimization") and `sources`.
-- The optimizer's best rotation is added as a fifth option, "Best balance found", when it differs from the hand-built four; otherwise the matching option says the search found nothing better.
+- The optimizer's best rotation is added as a fifth option, "Best balance under Wagro's rules", when it differs from the hand-built four; otherwise the matching option says the search found nothing better.
 - The recommendation can add two information-only notes: recent unusual months (ML, unsupervised) and a satellite-versus-calendar timing mismatch (Statistics). Neither changes any score.
 - `predictSuitability()` exists and always returns "not-trained".
 

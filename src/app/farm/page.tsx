@@ -366,7 +366,7 @@ export default function Page() {
       <PageHeader
         eyebrow="Your farm"
         title="Tell us about your field"
-        description="Four short steps. Then we show which crop order fits your field best."
+        description="Four short steps. Then we show which crop orders score best under Wagro's rules."
       />
       {ready ? (
         <Wizard initial={farm} />

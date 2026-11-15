@@ -75,7 +75,7 @@ export default function SatelliteMap({ lat, lng }: { lat: number; lng: number })
   return (
     <section className="rounded-[28px] border border-line bg-paper p-6">
       <h2 className="font-display text-3xl">Your area from space</h2>
-      <p className="mt-1 text-sm text-muted">NASA satellite maps. The dark dot is your field.</p>
+      <p className="mt-1 text-sm text-muted">NASA satellite maps. The dark dot marks your pin; each map pixel covers 1 km or more, so the maps show the area, not your field.</p>
 
       <div className="mt-4 grid grid-cols-2 gap-1 rounded-2xl border border-line bg-paper p-1 sm:grid-cols-4">
         {GIBS_LAYERS.map((l) => (
