@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { parseSoilGrids, soilgridsQuery, type SoilEstimate } from "@/lib/soil/soilgrids";
 
+/** Long NASA/ISRIC requests: allow up to 60 s on serverless hosts (e.g. Vercel). */
+export const maxDuration = 60;
+
 /**
  * Modelled soil properties (ISRIC SoilGrids v2) for one point.
  * The upstream service often takes 10–20 s, so results are cached in memory

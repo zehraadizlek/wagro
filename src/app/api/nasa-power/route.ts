@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { POWER_PARAMS, fetchPower } from "@/lib/nasa/power";
 
+/** Long NASA/ISRIC requests: allow up to 60 s on serverless hosts (e.g. Vercel). */
+export const maxDuration = 60;
+
 /** Accepts only non-empty numeric strings inside the given range. */
 const numberInRange = (min: number, max: number) =>
   z

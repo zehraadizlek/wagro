@@ -4,6 +4,9 @@ import { featureTable } from "@/lib/features/monthly";
 import { fetchPower, POWER_PARAMS } from "@/lib/nasa/power";
 import { ymd } from "@/lib/nasa/range";
 
+/** Long NASA/ISRIC requests: allow up to 60 s on serverless hosts (e.g. Vercel). */
+export const maxDuration = 60;
+
 /**
  * Long-term monthly feature table for one location.
  * Fetches up to 30 years of NASA POWER daily data on the server and returns
