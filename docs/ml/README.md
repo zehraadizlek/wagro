@@ -11,6 +11,8 @@ still runs the rule-based engine and the existing statistics.
 | [architecture-decision.md](architecture-decision.md) | Where ML runs and why (TypeScript in-app; offline Python only for trained models) |
 | [model-cards/](model-cards/) | One card per model or method, with status |
 | [evaluation.md](evaluation.md) | Generated results (`npm run evaluate`) |
+| [reports/unsupervised-anomaly-detection.md](reports/unsupervised-anomaly-detection.md) | Technical report on the Isolation Forest component |
+| [../project/team-project-brief.md](../project/team-project-brief.md) | Project brief for the team's submission materials |
 
 | Component | Method label | Status |
 |---|---|---|
