@@ -7,9 +7,12 @@ import {
   BarChart,
   CartesianGrid,
   Legend,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import { AXIS_TICK, LEGEND_PROPS, TOOLTIP_PROPS, axisTitle } from "@/components/ui/chart-style";
 import RecommendationCard from "@/components/rotation/RecommendationCard";
 import SeasonTimeline from "@/components/rotation/SeasonTimeline";
 import { doyLabel } from "@/lib/nasa/indicators";
@@ -36,7 +39,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="break-inside-avoid rounded-[24px] border border-line bg-paper p-6 print:rounded-none print:border-x-0 print:border-t-0 print:px-0">
+    <section className="rounded-[24px] border border-line bg-paper p-6">
       <h2 className="mb-3 font-display text-3xl">{title}</h2>
       {children}
     </section>
@@ -116,12 +119,6 @@ export default function Page() {
             decision-support tool.
           </p>
         </div>
-        <button
-          onClick={() => window.print()}
-          className="btn btn-primary print:hidden"
-        >
-          Print or save as PDF
-        </button>
       </div>
 
       <RecommendationCard rec={rec} results={results} />
@@ -209,18 +206,27 @@ export default function Page() {
       </Section>
 
       <Section title="4. Comparing the options">
+        <p className="mb-3 text-xs text-muted">
+          Score from 0 to 100 for each criterion, under Wagro&apos;s rules. Higher is better.
+        </p>
         <div className="overflow-x-auto">
-          <BarChart width={760} height={300} data={chartData}>
-            <CartesianGrid stroke="#e4ded2" vertical={false} />
-            <XAxis dataKey="criterion" tick={{ fontSize: 12, fill: "#6b665c" }} />
-            <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: "#6b665c" }} width={36} />
-            <Legend />
-            {results.map((r, i) => (
-              <Bar key={r.id} dataKey={r.name} fill={COLORS[i]} isAnimationActive={false} />
-            ))}
-          </BarChart>
+          <div className="h-[360px] min-w-[680px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} barCategoryGap="18%">
+                <CartesianGrid stroke="#e4ded2" vertical={false} />
+                <XAxis dataKey="criterion" tick={{ ...AXIS_TICK, width: 76 }} interval={0} height={48} />
+                <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={AXIS_TICK} width={52} label={axisTitle("Score (0–100)")} />
+                <Tooltip {...TOOLTIP_PROPS} />
+                <Legend {...LEGEND_PROPS} />
+                {results.map((r, i) => (
+                  <Bar key={r.id} dataKey={r.name} fill={COLORS[i]} isAnimationActive={false} />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-        <table className="mt-5 w-full text-sm">
+        <div className="mt-5 overflow-x-auto">
+        <table className="w-full min-w-[560px] text-sm">
           <thead>
             <tr className="border-b border-line text-left">
               <th className="py-2 pr-3 font-medium text-muted">What it measures</th>
@@ -262,6 +268,7 @@ export default function Page() {
             </tr>
           </tbody>
         </table>
+        </div>
         <p className="mt-2 text-xs text-muted">
           Scores run from 0 to 100. Higher is better for the farm under these
           rules.

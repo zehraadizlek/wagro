@@ -1,31 +1,55 @@
 "use client";
 
 import Link from "next/link";
-import PageHeader from "@/components/ui/PageHeader";
 import { useFarm } from "@/lib/storage/use-farm";
 
-const STEPS = [
-  { n: "1", title: "Answer 4 short questions", text: "Where your field is, what you grow, your soil and what matters to you." },
-  { n: "2", title: "We read NASA data", text: "10 years of rain, frost, heat and soil moisture for the area around your field (a grid of about 50 km), not field measurements." },
-  { n: "3", title: "See your best options", text: "Which crop order fits, why, and what to check locally." },
-];
+const GRAINS = [0, 1, 2, 3, 4];
+
+/** One wheat stalk that sways gently. Decorative only. */
+function WheatStalk() {
+  return (
+    <svg
+      viewBox="0 0 60 130"
+      className="sway mx-auto h-28 w-auto md:h-32"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {/* stem and leaf */}
+      <path d="M30 128 C30 100 31 70 30 44" stroke="var(--color-olive)" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d="M30 96 C22 90 15 82 12 72 C20 76 27 84 30 92" fill="var(--color-olive)" opacity="0.85" />
+      {/* ear */}
+      <ellipse cx="30" cy="14" rx="3.6" ry="6" fill="var(--color-mocha)" />
+      <path d="M30 8 L30 0" stroke="var(--color-mocha)" strokeWidth="1" strokeLinecap="round" />
+      {GRAINS.map((i) => {
+        const y = 22 + i * 6.5;
+        return (
+          <g key={i}>
+            <ellipse cx="25.5" cy={y} rx="3.6" ry="6" fill="var(--color-mocha)" transform={`rotate(-28 25.5 ${y})`} />
+            <ellipse cx="34.5" cy={y} rx="3.6" ry="6" fill="var(--color-mocha)" transform={`rotate(28 34.5 ${y})`} />
+            <path d={`M23 ${y - 5} L15 ${y - 15}`} stroke="var(--color-mocha)" strokeWidth="0.9" strokeLinecap="round" />
+            <path d={`M37 ${y - 5} L45 ${y - 15}`} stroke="var(--color-mocha)" strokeWidth="0.9" strokeLinecap="round" />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
 
 export default function Page() {
   const { farm, ready } = useFarm();
 
   return (
-    <>
-      <PageHeader
-        eyebrow="Grow smarter. Rotate wiser."
-        title={
-          <>
-            What should go in the ground <em className="text-accent">next?</em>
-          </>
-        }
-        description="Find a crop order that protects your soil and saves water."
-      />
+    <section className="rise mx-auto flex min-h-[calc(100vh-15rem)] max-w-2xl flex-col items-center justify-center text-center">
+      <WheatStalk />
+      <h1 className="mt-6 font-display text-4xl leading-tight text-espresso md:text-6xl">
+        What should go in the ground <em className="text-accent">next?</em>
+      </h1>
+      <p className="mt-4 max-w-lg text-lg text-muted">
+        Find a crop order that protects your soil and saves water, using NASA
+        climate and satellite data.
+      </p>
 
-      <div className="rise flex flex-wrap gap-3">
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Link href="/farm" className="btn btn-primary">
           {farm ? "Change my answers" : "Start"}
         </Link>
@@ -36,15 +60,10 @@ export default function Page() {
         )}
       </div>
 
-      <ol className="mt-12 grid gap-4 md:grid-cols-3">
-        {STEPS.map((s) => (
-          <li key={s.n} className="rounded-[24px] border border-line bg-paper p-5">
-            <div className="text-xs font-medium text-olive">Step {s.n}</div>
-            <h2 className="mt-1 font-display text-2xl leading-tight">{s.title}</h2>
-            <p className="mt-2 text-sm text-muted">{s.text}</p>
-          </li>
-        ))}
-      </ol>
-    </>
+      <p className="mt-6 max-w-md text-xs text-muted">
+        Weather data covers the area around your field (a grid of about 50 km),
+        not measurements in the field.
+      </p>
+    </section>
   );
 }

@@ -9,7 +9,7 @@
 
 ## 1. What WAGRO is
 
-WAGRO is a web app that helps a farmer compare **crop rotations**, meaning the order in which crops follow each other on a field over several seasons. It aims at rotations that protect the soil and save water. The farmer answers four short questions. WAGRO reads NASA Earth-observation data for the area around the field and shows which rotation scores best under its rules, why, what is uncertain, and what to check locally. A printable report can be taken to an adviser.
+WAGRO is a web app that helps a farmer compare **crop rotations**, meaning the order in which crops follow each other on a field over several seasons. It aims at rotations that protect the soil and save water. The farmer answers four short questions. WAGRO reads NASA Earth-observation data for the area around the field and shows which rotation scores best under its rules, why, what is uncertain, and what to check locally. A report page summarises the results for an adviser.
 
 ## 2. The agricultural problem
 
@@ -39,7 +39,7 @@ WAGRO is a web app that helps a farmer compare **crop rotations**, meaning the o
    - Plant cover around your field.
    - Satellite maps.
    - What-if sliders.
-4. **Report**, a printable summary for an adviser.
+4. **Report**, an on-screen summary for an adviser.
 5. **How it works**, the methods, labels and limitations.
 
 ## 4. NASA and other data sources
@@ -49,7 +49,7 @@ WAGRO is a web app that helps a farmer compare **crop rotations**, meaning the o
 | **NASA POWER** daily, AG community (T2M, T2M_MAX, T2M_MIN, PRECTOTCORR, RH2M, WS2M, ALLSKY_SFC_SW_DWN, GWETTOP, GWETROOT) | Temperature, rain, humidity, wind, solar radiation and modelled soil wetness. 10 years drive the scores; 30 years drive the unusual-month detection. | About 50 km grid |
 | **MODIS Terra NDVI** (NASA GIBS) | Monthly plant-cover maps, and a 3-year NDVI series around the pin read from the map tiles through NASA's published colormap | About 1 km |
 | **SMAP L4 root-zone soil moisture** (GIBS) | Soil-moisture map layer | About 9 km, model-assimilated |
-| **MODIS land surface temperature**, monthly daytime (GIBS) | Ground-heat map layer | About 1 km or more |
+| **MODIS land surface temperature**, monthly daytime (GIBS) | Ground-heat map layer | About 5 km |
 | **GRACE water storage** (GIBS) | Underground water-storage anomaly map layer; the GIBS layer ends in 2022-07 | About 300 km |
 | **AWS Terrain Tiles** (NASA SRTM where available, other DEMs such as EU-DEM elsewhere) | Slope and frost-prone low spots, which feed the erosion score | About 30 m |
 | ISRIC SoilGrids v2 | Server route built and tested, **not shown in the app yet** | 250 m model |
@@ -188,7 +188,6 @@ Every result has a **method badge**: Rule-based, Statistics, ML (unsupervised) o
 - The anomaly detector finds statistically unusual months, not harmful ones.
 - GIBS "latest month" dates are fixed in the code and need updating over time.
 - The app has no field boundary. The terrain circle is an approximation.
-- Print/PDF output of the report has had only a basic check.
 
 ## 16. Implemented versus planned
 

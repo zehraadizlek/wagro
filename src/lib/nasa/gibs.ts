@@ -23,6 +23,8 @@ export type GibsLayer = {
   day: "01" | "15";
   legend: string;
   colormap: string;
+  /** What kind of data the layer is, and its rough pixel size (display only). */
+  kind: string;
 };
 
 const BASE = "https://gibs.earthdata.nasa.gov";
@@ -33,6 +35,7 @@ export const GIBS_LAYERS: GibsLayer[] = [
     label: "Plant growth",
     reading: "Greener means more living plants. Pale means bare or dry land.",
     product: "MODIS Terra vegetation index (NDVI), monthly",
+    kind: "Satellite observation · about 1 km pixels",
     layer: "MODIS_Terra_L3_NDVI_Monthly",
     maxZoom: 7,
     latest: "2026-10",
@@ -45,6 +48,7 @@ export const GIBS_LAYERS: GibsLayer[] = [
     label: "Soil moisture",
     reading: "Bluer means wetter soil in the root zone. Browner means drier.",
     product: "SMAP L4 root-zone soil moisture, daily (mid-month shown)",
+    kind: "Model estimate built from satellite data · about 9 km pixels",
     layer: "SMAP_L4_Analyzed_Root_Zone_Soil_Moisture",
     maxZoom: 6,
     latest: "2026-10",
@@ -57,6 +61,7 @@ export const GIBS_LAYERS: GibsLayer[] = [
     label: "Ground heat",
     reading: "Redder means hotter ground in the daytime.",
     product: "MODIS Terra land surface temperature, monthly daytime",
+    kind: "Satellite observation · about 5 km pixels",
     layer: "MODIS_Terra_L3_Land_Surface_Temp_Monthly_Day",
     maxZoom: 6,
     latest: "2026-10",
@@ -69,6 +74,7 @@ export const GIBS_LAYERS: GibsLayer[] = [
     label: "Water storage",
     reading: "Red means less water stored underground than usual. Blue means more. Very coarse: about 300 km.",
     product: "GRACE / GRACE-FO total water storage anomaly, monthly (until July 2022)",
+    kind: "Derived from satellite gravity data · about 300 km",
     layer: "GRACE_Tellus_Liquid_Water_Equivalent_Thickness_Mascon_CRI",
     maxZoom: 6,
     latest: "2022-07",

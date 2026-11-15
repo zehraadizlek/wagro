@@ -1,6 +1,7 @@
 "use client";
 
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { AXIS_TICK, TOOLTIP_PROPS, axisTitle } from "@/components/ui/chart-style";
 import { MONTH_LABELS } from "@/lib/nasa/indicators";
 import MethodBadge from "@/components/ml/MethodBadge";
 import { seasonSummary } from "@/lib/features/ndvi";
@@ -72,13 +73,13 @@ export default function PlantGrowth({ lat, lng, crop }: { lat: number; lng: numb
                 : "Rarely looks bare: something is growing most of the year."}
             </li>
           </ul>
-          <div className="mt-4 h-48">
+          <div className="mt-4 h-56">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chart}>
                 <CartesianGrid stroke="#e4ded2" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#6b665c" }} interval={5} />
-                <YAxis domain={[0, 1]} tick={{ fontSize: 11, fill: "#6b665c" }} width={32} />
-                <Tooltip />
+                <XAxis dataKey="label" tick={AXIS_TICK} interval={5} />
+                <YAxis domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} tick={AXIS_TICK} width={48} label={axisTitle("NDVI (0–1)")} />
+                <Tooltip {...TOOLTIP_PROPS} formatter={(v) => [v, "NDVI"]} />
                 <Line dataKey="ndvi" name="Plant cover (NDVI)" stroke="#5f7052" strokeWidth={2} dot={false} connectNulls />
               </LineChart>
             </ResponsiveContainer>

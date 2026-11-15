@@ -213,7 +213,7 @@ export default function Page() {
               Change my answers
             </Link>
             <Link href="/report" className="btn btn-primary w-full">
-              Print report
+              See full report
             </Link>
           </div>
         </div>

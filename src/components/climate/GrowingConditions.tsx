@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { AXIS_TICK, LEGEND_PROPS, TOOLTIP_PROPS, axisTitle } from "@/components/ui/chart-style";
 import { MONTH_LABELS, doyLabel, type AgroIndicators } from "@/lib/nasa/indicators";
 
 type Level = "good" | "watch" | "risk";
@@ -22,7 +23,7 @@ const BADGE: Record<Level, { text: string; className: string }> = {
   risk: { text: "Risk", className: "bg-clay text-paper" },
 };
 
-const tick = { fontSize: 12, fill: "#6b665c" };
+const tick = AXIS_TICK;
 const round = (v: number | null) => (v === null ? null : Math.round(v));
 const months = (ms: number[]) => ms.map((m) => MONTH_LABELS[m - 1]).join(", ");
 
@@ -145,9 +146,9 @@ export default function GrowingConditions({ ind }: { ind: AgroIndicators }) {
                 <BarChart data={monthly}>
                   <CartesianGrid stroke="#e4ded2" vertical={false} />
                   <XAxis dataKey="label" tick={tick} />
-                  <YAxis tick={tick} width={40} />
-                  <Tooltip />
-                  <Legend />
+                  <YAxis tick={tick} width={48} label={axisTitle("mm per month")} />
+                  <Tooltip {...TOOLTIP_PROPS} formatter={(v) => `${v} mm`} />
+                  <Legend {...LEGEND_PROPS} />
                   <Bar dataKey="rain" name="Rain (mm)" fill="#7d8f69" />
                   <Bar dataKey="need" name="Water need (mm)" fill="#8b7355" />
                 </BarChart>
@@ -165,12 +166,12 @@ export default function GrowingConditions({ ind }: { ind: AgroIndicators }) {
                 <ComposedChart data={monthly}>
                   <CartesianGrid stroke="#e4ded2" vertical={false} />
                   <XAxis dataKey="label" tick={tick} />
-                  <YAxis yAxisId="t" tick={tick} unit="°" width={40} />
-                  <YAxis yAxisId="d" orientation="right" tick={tick} width={30} />
-                  <Tooltip />
-                  <Legend />
-                  <Bar yAxisId="d" dataKey="frost" name="Frost nights" fill="#8fa3a8" />
-                  <Bar yAxisId="d" dataKey="hot" name="Hot days" fill="#c9b08f" />
+                  <YAxis yAxisId="t" tick={tick} width={48} label={axisTitle("°C")} />
+                  <YAxis yAxisId="d" orientation="right" tick={tick} width={44} label={axisTitle("days per month", "right")} />
+                  <Tooltip {...TOOLTIP_PROPS} />
+                  <Legend {...LEGEND_PROPS} />
+                  <Bar yAxisId="d" dataKey="frost" name="Frost nights (days)" fill="#8fa3a8" />
+                  <Bar yAxisId="d" dataKey="hot" name="Hot days (days)" fill="#c9b08f" />
                   <Line yAxisId="t" dataKey="max" name="Day (°C)" stroke="#8b7355" strokeWidth={2} dot={false} />
                   <Line yAxisId="t" dataKey="min" name="Night (°C)" stroke="#3f4a3a" strokeWidth={2} dot={false} />
                 </ComposedChart>

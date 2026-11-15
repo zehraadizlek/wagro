@@ -51,7 +51,6 @@ still runs the rule-based engine and the existing statistics.
 | Hot, frost-free: Sahel, Niger (13.5, 2.1) | Runs without errors; 197 hot days/year, no frost. **Finding:** the 9-crop list does not fit (best score 44, "best balance" barley → vetch → safflower). Added a warning when the best option scores below 50. |
 | Phone width 375 px: results and How pages | No horizontal overflow |
 | Report with five options | Table and chart render; method labels shown; outdated limitation text fixed |
-| Print / PDF | **Not tested** (only that print CSS is present) |
 
 ## What is still open
 
@@ -59,7 +58,6 @@ still runs the rule-based engine and the existing statistics.
 - Climate-aware crop calendars (mild winters, tropics) and crops for other regions.
 - Showing SoilGrids next to the farmer's soil input (route built, not displayed).
 - Reading GIBS latest dates at run time instead of the fixed values in `gibs.ts`.
-- End-to-end print/PDF check of the report.
 
 Rules for this work: never fabricate training data, never call a rule-based
 score an ML prediction, and keep the rule-based engine as the working fallback.

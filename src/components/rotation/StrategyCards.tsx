@@ -34,6 +34,11 @@ export default function StrategyCards({
               r.id === bestId ? "border-accent" : "border-line"
             }`}
           >
+            {r.id === bestId && (
+              <div className="text-xs font-medium uppercase tracking-[0.12em] text-olive">
+                Highest score under Wagro&apos;s rules
+              </div>
+            )}
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="font-display text-2xl leading-tight">{r.name}</h3>
@@ -48,22 +53,19 @@ export default function StrategyCards({
               <div className="shrink-0 text-right">
                 <span className="font-display text-3xl">{r.overall}</span>
                 <span className="text-sm text-muted">/100</span>
-                {r.id === bestId && (
-                  <div className="text-xs font-medium text-olive">Highest score under Wagro&apos;s rules</div>
-                )}
               </div>
             </div>
 
             <p className="text-sm">{r.why}</p>
 
-            <div>
+            <div className="border-t border-line pt-3">
               <h4 className="text-sm font-medium text-olive">Good for</h4>
               <List items={r.benefits} />
             </div>
 
             {r.localReview.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium text-clay">Check locally</h4>
+              <div className="rounded-xl bg-sand/60 p-3">
+                <h4 className="text-sm font-medium text-mocha">Check locally</h4>
                 <List items={r.localReview} />
               </div>
             )}

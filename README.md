@@ -18,7 +18,7 @@ Challenge 2026. It supports, and does not replace, local agronomic advice.
 - **Plant cover:** 3 years of MODIS NDVI at the field, season timing, and a check against the crop calendar.
 - **Satellite maps:** MODIS NDVI, SMAP soil moisture, MODIS land temperature and GRACE water storage, with a month slider.
 - **What-if sliders:** +0 to +3 °C and −30 % to +10 % rain; everything re-scores.
-- **Printable report** for an adviser, and a **How it works** page.
+- **Report page** summarising the results for an adviser, and a **How it works** page.
 
 ## How results are labelled
 
@@ -99,6 +99,5 @@ database and no account.
 - NASA POWER is a ~50 km grid; NDVI is ~1 km and mixes neighbouring fields; elevation is ~30 m.
 - Scores compare options under the same rules. They do not predict yield or profit.
 - GIBS "latest month" dates are set in `src/lib/nasa/gibs.ts` and need updating over time.
-- Print/PDF output of the report has not been tested end to end.
 
 More detail: [docs/ml/README.md](docs/ml/README.md).

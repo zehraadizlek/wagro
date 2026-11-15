@@ -95,7 +95,9 @@ export default function SatelliteMap({ lat, lng }: { lat: number; lng: number })
         ))}
       </div>
 
-      <div ref={hostRef} className="isolate mt-4 h-80 w-full overflow-hidden rounded-2xl border border-line" />
+      <p className="mt-3 text-xs font-medium text-olive">{layer.kind}</p>
+
+      <div ref={hostRef} className="isolate mt-2 h-80 w-full overflow-hidden rounded-2xl border border-line" />
 
       <label className="mt-4 block">
         <div className="flex justify-between text-sm">
@@ -118,7 +120,7 @@ export default function SatelliteMap({ lat, lng }: { lat: number; lng: number })
 
       <p className="mt-4 text-sm">{layer.reading}</p>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={layer.legend} alt={`${layer.label} colour scale`} className="mt-2 h-14 max-w-full" />
+      <img src={layer.legend} alt={`${layer.label} colour scale`} className="mt-3 h-auto w-full max-w-lg" />
       <p className="mt-2 text-xs text-muted">Source: NASA {layer.product}, via NASA GIBS.</p>
     </section>
   );
